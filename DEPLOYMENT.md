@@ -1,67 +1,40 @@
-# Deploying OnboardHub
+# Deployment Guide for OnboardHub 🚀
 
-Since OnboardHub has both a **Frontend** (Next.js) and a **Backend** (Node.js/Express), you need to deploy them separately.
+This repository is set up as a **Monorepo** containing both the Frontend (Next.js) and Backend (Express).
 
-## Prerequisites
-1.  **GitHub Account**: You must push this project to a GitHub Repository.
-2.  **Vercel Account** (Free): For hosting the Frontend.
-3.  **Render/Railway Account** (Free): For hosting the Backend.
+## 1. Deploy Frontend (Vercel)
+Vercel is the best place to host the Next.js frontend.
 
----
+1.  Go to [Vercel](https://vercel.com) and click **"Add New" > "Project"**.
+2.  Import your GitHub Repository: `OnboardHub`.
+3.  **Configure Project**:
+    *   **Framework Preset**: Next.js (Automatic).
+    *   **Root Directory**: Click "Edit" and select `frontend`.
+4.  **Environment Variables**:
+    *   Add `NEXT_PUBLIC_BACKEND_URL`.
+    *   **Value**: Logic dictates you don't have this URL yet until you deploy the backend. You can deploy first, then come back and update this.
+5.  Click **Deploy**.
 
-## Step 1: Push to GitHub
-1.  Initialize git in the project root:
-    ```bash
-    git init
-    git add .
-    git commit -m "Initial commit"
-    ```
-2.  Create a new repository on GitHub.
-3.  Link and push:
-    ```bash
-    git remote add origin https://github.com/YOUR_USERNAME/OnboardHub.git
-    git push -u origin main
-    ```
+## 2. Deploy Backend (Render / Railway)
+Since the backend is a Node.js Express server, you need a host that runs persistent processes. [Render](https://render.com) has a free tier.
 
----
-
-## Step 2: Deploy Backend (Render.com)
-The backend needs to be alive for the frontend to fetch data.
-
-1.  Log in to [Render](https://render.com/).
-2.  Click **New +** -> **Web Service**.
-3.  Connect your GitHub repository.
-4.  **Settings**:
-    *   **Root Directory**: `backend`
+1.  Go to [Render Dashboard](https://dashboard.render.com).
+2.  Click **"New +" -> "Web Service"**.
+3.  Connect your GitHub Repository `OnboardHub`.
+4.  **Configure**:
+    *   **Root Directory**: `backend` (Important!)
     *   **Build Command**: `npm install`
     *   **Start Command**: `node server.js`
-5.  Click **Deploy**.
-6.  **Copy the URL** provided by Render (e.g., `https://onboardhub-backend.onrender.com`).
+    *   **Instance Type**: Free
+5.  **Environment Variables**:
+    *   `GITHUB_TOKEN`: (Optional, but recommended for higher rate limits). Create one at GitHub Settings -> Developer Settings -> Personal Access Tokens.
+6.  Click **Create Web Service**.
 
----
+## 3. Connect Them
+1.  Once Render finishes deploying, copy the URL (e.g., `https://onboardhub-backend.onrender.com`).
+2.  Go back to your **Vercel Project Settings -> Environment Variables**.
+3.  Add/Update `NEXT_PUBLIC_BACKEND_URL` with your Render URL (no trailing slash).
+4.  **Redeploy** your Vercel project (Go to Deployments -> Redeploy) for the changes to take effect.
 
-## Step 3: Configure Frontend
-You need to tell the Frontend where the Backend lives.
-
-1.  Open `frontend/app/dashboard/page.tsx` (and `frontend/services/api.ts` if you made one).
-2.  Replace `http://localhost:5000` with your new **Render Backend URL**.
-    *   *Tip: It's better to use an Environment Variable for this.*
-3.  Commit and push the change to GitHub:
-    ```bash
-    git add .
-    git commit -m "Update backend URL"
-    git push
-    ```
-
----
-
-## Step 4: Deploy Frontend (Vercel)
-1.  Log in to [Vercel](https://vercel.com/).
-2.  Click **Add New...** -> **Project**.
-3.  Import your `OnboardHub` repository.
-4.  **Settings**:
-    *   **Framework Preset**: Next.js (should auto-detect).
-    *   **Root Directory**: `frontend` (Click 'Edit' and select the `frontend` folder).
-5.  Click **Deploy**.
-
-🎉 **Done!** Vercel will give you a public URL (e.g., `https://onboardhub.vercel.app`) that you can share with anyone!
+## Universal Link 🌐
+Your application will be live at your Vercel URL (e.g., `https://onboardhub.vercel.app`).

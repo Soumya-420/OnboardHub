@@ -74,7 +74,8 @@ export default function Home() {
         if (userSkills.length === 0 && !keywordInput.trim()) return; // Allow ONE of them to exist
         setGlobalLoading(true);
         try {
-            const res = await fetch("http://localhost:5000/api/issues/global", {
+            const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+            const res = await fetch(`${API_URL}/api/issues/global`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

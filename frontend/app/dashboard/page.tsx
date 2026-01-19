@@ -314,10 +314,11 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
         try {
             // Check if mock issue (for Safe Mode) or Real
             const [owner, name] = data.repo ? data.repo.split('/') : ["unknown", "unknown"];
+            const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
-            // If we are in safe mode or missing repo, use mock logic if desired, 
+            // If we are in safe mode or missing repo, use mock logic if desired,
             // but the backend handles mocking now too.
-            const res = await fetch(`http://localhost:5000/api/issues/${owner}/${name}/issues/${issue.number}/comments`);
+            const res = await fetch(`${API_URL}/api/issues/${owner}/${name}/issues/${issue.number}/comments`);
             const json = await res.json();
             setActiveComments(json);
         } catch (e) {
@@ -348,7 +349,8 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
         if (userSkills.length === 0) return;
         setGlobalLoading(true);
         try {
-            const res = await fetch("http://localhost:5000/api/issues/global", {
+            const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+            const res = await fetch(`${API_URL}/api/issues/global`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ skills: userSkills }),
