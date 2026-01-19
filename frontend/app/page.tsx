@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { TypewriterHero } from "../components/TypewriterHero";
 import { BeginnerReadinessCard } from "../components/BeginnerReadinessCard";
@@ -11,6 +12,7 @@ import "./globals.css";
 
 export default function Home() {
     const { scrollY } = useScroll();
+    const router = useRouter();
     const y1 = useTransform(scrollY, [0, 500], [0, 200]);
     const y2 = useTransform(scrollY, [0, 500], [0, -150]);
 
@@ -211,7 +213,7 @@ I am eager to contribute to ${repoName.split('/')[1] || repoName}. My skills in 
                             onSubmit={(e) => {
                                 e.preventDefault();
                                 const input = e.currentTarget.querySelector('input') as HTMLInputElement;
-                                if (input.value) window.location.href = `/dashboard?repo=${encodeURIComponent(input.value)}`;
+                                if (input.value) router.push(`/dashboard?repo=${encodeURIComponent(input.value)}`);
                             }}
                         >
                             <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
