@@ -129,7 +129,8 @@ export default function Dashboard() {
 
         try {
             // Attempt Real Analysis
-            const res = await fetch("http://localhost:5000/api/analyze", {
+            const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+            const res = await fetch(`${API_URL}/api/analyze`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ repoUrl: url, isDemo }),

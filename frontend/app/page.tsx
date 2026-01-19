@@ -94,7 +94,15 @@ export default function Home() {
                 console.error("Global issues fetch failed:", data);
             }
         } catch (error) {
-            console.error("Error fetching global issues:", error);
+            console.error("Error fetching global issues, using fallback:", error);
+            // Fallback Mock Data for Demo/Offline Mode
+            const mockGlobal = [
+                { id: 101, title: "Add Dark Mode Support", repo_name: "facebook/react", labels: [{ name: "good first issue", color: "7057ff" }], url: "https://github.com/facebook/react/issues/1", body: "We need dark mode." },
+                { id: 102, title: "Fix Typos in Docs", repo_name: "vercel/next.js", labels: [{ name: "documentation", color: "0075ca" }], url: "https://github.com/vercel/next.js/issues/1", body: "Typos found in README." }
+            ];
+            setGlobalIssues(mockGlobal);
+            setShowSkillModal(false);
+            setShowGlobalModal(true);
         } finally {
             setGlobalLoading(false);
         }
@@ -169,7 +177,8 @@ I am eager to contribute to ${repoName.split('/')[1] || repoName}. My skills in 
             </nav>
 
             {/* Dynamic Background */}
-            <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-20 pointer-events-none"></div>
+            {/* Dynamic Background */}
+            <div className={`absolute inset-0 bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-20 pointer-events-none`} style={{ backgroundImage: `url('${process.env.NODE_ENV === 'production' ? '/OnboardHub' : ''}/grid.svg')` }}></div>
 
             <motion.div style={{ y: y1 }} className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-blue-600/20 blur-[150px] rounded-full pointer-events-none mix-blend-screen opacity-50"></motion.div>
             <motion.div style={{ y: y2 }} className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-purple-600/20 blur-[150px] rounded-full pointer-events-none mix-blend-screen opacity-50"></motion.div>
