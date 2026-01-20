@@ -1,11 +1,11 @@
-const isProd = process.env.NODE_ENV === 'production';
+const isGithubPages = process.env.DEPLOY_TARGET === 'gh-pages';
 const repo = '/OnboardHub';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: 'export',
-    basePath: isProd ? repo : '',
-    assetPrefix: isProd ? repo : '',
+    basePath: isGithubPages ? repo : '',
+    assetPrefix: isGithubPages ? repo : '',
     images: {
         unoptimized: true,
     },
