@@ -74,33 +74,70 @@ export default function Home() {
     };
 
     const fetchGlobalIssues = async () => {
-        if (userSkills.length === 0 && !keywordInput.trim()) return; // Allow ONE of them to exist
+        if (userSkills.length === 0 && !keywordInput.trim()) return;
         setGlobalLoading(true);
         try {
-            const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
-            const res = await fetch(`${API_URL}/api/issues/global`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    skills: userSkills,
-                    keyword: keywordInput // Send keyword to API
-                }),
-            });
+            // Construct GitHub Search Query
+            const parts = [
+                'is:open',
+                'is:issue',
+                'archived:false'
+            ];
+
+            // Add labels for "opportunity"
+            const difficultyLabels = ['good first issue', 'good-first-issue', 'beginner', 'help wanted', 'up-for-grabs'];
+            parts.push(`(${difficultyLabels.map(l => `label:"${l}"`).join(' OR ')})`);
+
+            // Add skills/keywords
+            if (userSkills.length > 0) {
+                // Search for any of the skills in the issue
+                parts.push(`(${userSkills.join(' OR ')})`);
+            }
+            if (keywordInput.trim()) {
+                parts.push(keywordInput.trim());
+            }
+
+            const query = parts.join(' ');
+            const encodedQuery = encodeURIComponent(query);
+
+            const res = await fetch(`https://api.github.com/search/issues?q=${encodedQuery}&sort=updated&order=desc&per_page=20`);
+
+            if (!res.ok) {
+                if (res.status === 403 || res.status === 429) {
+                    console.warn("Rate limit exceeded");
+                    // We can set an empty state or a specific error here if needed
+                    // setGlobalIssues([]); 
+                }
+                throw new Error(`GitHub API Error: ${res.status}`);
+            }
+
             const data = await res.json();
-            if (Array.isArray(data)) {
-                setGlobalIssues(data);
+
+            if (data && data.items) {
+                const mappedIssues = data.items.map((item: any) => ({
+                    id: item.id,
+                    title: item.title,
+                    number: item.number,
+                    labels: item.labels,
+                    comments: item.comments,
+                    user: item.user,
+                    html_url: item.html_url,
+                    body: item.body,
+                    repo_name: item.repository_url.replace('https://api.github.com/repos/', ''), // Extract full repo name
+                    url: item.html_url
+                }));
+                setGlobalIssues(mappedIssues);
                 setShowSkillModal(false);
                 setShowGlobalModal(true);
             } else {
-                console.error("Global issues fetch failed:", data);
+                setGlobalIssues([]);
             }
+
         } catch (error) {
-            console.error("Error fetching global issues, using fallback:", error);
-            // Fallback Mock Data for Demo/Offline Mode
-            setGlobalIssues([]); // Ensure no old data is shown
+            console.error("Error fetching global issues:", error);
+            setGlobalIssues([]);
             setShowSkillModal(false);
-            // Optional: User feedback for error could go here 
-            // setError("Couldn't find global issues right now.");
+            setShowGlobalModal(true);
         } finally {
             setGlobalLoading(false);
         }
