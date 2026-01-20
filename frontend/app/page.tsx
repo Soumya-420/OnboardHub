@@ -76,12 +76,14 @@ export default function Home() {
     const fetchGlobalIssues = async () => {
         if (userSkills.length === 0 && !keywordInput.trim()) return;
         setGlobalLoading(true);
+        // setGlobalIssues([]); // optionally clear old results
         try {
             // Construct GitHub Search Query
             const parts = [
                 'is:open',
                 'is:issue',
-                'archived:false'
+                'archived:false',
+                'no:assignee' // Only unassigned issues
             ];
 
             // Add labels for "opportunity"
@@ -90,23 +92,28 @@ export default function Home() {
 
             // Add skills/keywords
             if (userSkills.length > 0) {
-                // Search for any of the skills in the issue
-                parts.push(`(${userSkills.join(' OR ')})`);
+                // Improve search: search for the skill OR the language
+                const skillQueries = userSkills.map(s => `"${s}" OR language:${s}`);
+                parts.push(`(${skillQueries.join(' OR ')})`);
             }
             if (keywordInput.trim()) {
                 parts.push(keywordInput.trim());
             }
 
             const query = parts.join(' ');
+            console.log("GitHub Search Query:", query); // Debugging
+
             const encodedQuery = encodeURIComponent(query);
 
-            const res = await fetch(`https://api.github.com/search/issues?q=${encodedQuery}&sort=updated&order=desc&per_page=20`);
+            const res = await fetch(`https://api.github.com/search/issues?q=${encodedQuery}&sort=updated&order=desc&per_page=30`, {
+                cache: 'no-store'
+            });
 
             if (!res.ok) {
                 if (res.status === 403 || res.status === 429) {
                     console.warn("Rate limit exceeded");
-                    // We can set an empty state or a specific error here if needed
-                    // setGlobalIssues([]); 
+                    alert("GitHub API Rate Limit Exceeded. Please wait a minute and try again."); // Simple feedback
+                    throw new Error("Rate limit exceeded");
                 }
                 throw new Error(`GitHub API Error: ${res.status}`);
             }
@@ -123,10 +130,13 @@ export default function Home() {
                     user: item.user,
                     html_url: item.html_url,
                     body: item.body,
-                    repo_name: item.repository_url.replace('https://api.github.com/repos/', ''), // Extract full repo name
+                    repo_name: item.repository_url.replace('https://api.github.com/repos/', ''),
                     url: item.html_url
                 }));
                 setGlobalIssues(mappedIssues);
+                if (mappedIssues.length === 0) {
+                    console.log("No issues found for query:", query);
+                }
                 setShowSkillModal(false);
                 setShowGlobalModal(true);
             } else {
@@ -135,6 +145,8 @@ export default function Home() {
 
         } catch (error) {
             console.error("Error fetching global issues:", error);
+            // Don't clear issues on error if we want to show stale data, 
+            // but for now clearing/showing empty state is safer.
             setGlobalIssues([]);
             setShowSkillModal(false);
             setShowGlobalModal(true);
