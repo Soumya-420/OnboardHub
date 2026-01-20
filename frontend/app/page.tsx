@@ -97,13 +97,10 @@ export default function Home() {
         } catch (error) {
             console.error("Error fetching global issues, using fallback:", error);
             // Fallback Mock Data for Demo/Offline Mode
-            const mockGlobal = [
-                { id: 101, title: "Add Dark Mode Support", repo_name: "facebook/react", labels: [{ name: "good first issue", color: "7057ff" }], url: "https://github.com/facebook/react/issues/1", body: "We need dark mode." },
-                { id: 102, title: "Fix Typos in Docs", repo_name: "vercel/next.js", labels: [{ name: "documentation", color: "0075ca" }], url: "https://github.com/vercel/next.js/issues/1", body: "Typos found in README." }
-            ];
-            setGlobalIssues(mockGlobal);
+            setGlobalIssues([]); // Ensure no old data is shown
             setShowSkillModal(false);
-            setShowGlobalModal(true);
+            // Optional: User feedback for error could go here 
+            // setError("Couldn't find global issues right now.");
         } finally {
             setGlobalLoading(false);
         }
