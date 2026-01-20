@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnboardHub Diagnostic</title>
+    <style>
+        body { font-family: monospace; background: #0d1117; color: #c9d1d9; padding: 20px; }
+        #log { background: #161b22; padding: 15px; border-radius: 5px; white-space: pre-wrap; word-break: break-all; }
+        .error { color: #f85149; }
+        .success { color: #3fb950; }
+        .info { color: #58a6ff; }
+        button { background: #238636; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>GitHub API Diagnostic</h1>
+    <button onclick="runDiagnostic()">Run Search Test</button>
+    <div id="log">Click the button to start...</div>
+
+    <script>
+        async function runDiagnostic() {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML = "Starting diagnostic...\n";
+
+            const skills = ["javascript"];
+            const keyword = "";
+
+            const parts = [
+                'is:open',
+                'is:issue',
+                'archived:false',
+                'no:assignee'
+            ];
+
+            const difficultyLabels = ['good first issue', 'good-first-issue', 'beginner', 'help wanted', 'up-for-grabs'];
+            parts.push(`(${difficultyLabels.map(l => `label:"${l}"`).join(' OR ')})`);
+
+            if (skills.length > 0) {
+                const skillQueries = skills.map(s => `"${s}" OR language:${s}`);
+                parts.push(`(${skillQueries.join(' OR ')})`);
+            }
+            if (keyword.trim()) {
+                parts.push(keyword.trim());
+            }
+
+            const query = parts.join(' ');
+            logDiv.innerHTML += `<span class="info">QUERY:</span> ${query}\n\n`;
+
+            const url = `https://api.github.com/search/issues?q=${encodeURIComponent(query)}&sort=updated&order=desc&per_page=5`;
+            logDiv.innerHTML += `<span class="info">URL:</span> ${url}\n\n`;
+
+            try {
+                const res = await fetch(url, { cache: 'no-store' });
+                logDiv.innerHTML += `STATUS: ${res.status} ${res.statusText}\n`;
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    logDiv.innerHTML += `<span class="success">SUCCESS!</span> Found ${data.total_count} items.\n\n`;
+                    logDiv.innerHTML += "FIRST 2 RESULTS:\n";
+                    logDiv.innerHTML += JSON.stringify(data.items.slice(0, 2), null, 2);
+                } else {
+                    logDiv.innerHTML += `<span class="error">FAILED:</span> ${JSON.stringify(data, null, 2)}\n`;
+                }
+            } catch (err) {
+                logDiv.innerHTML += `<span class="error">FETCH ERROR:</span> ${err.message}\n`;
+            }
+        }
+    </script>
+</body>
+</html>

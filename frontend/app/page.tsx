@@ -76,46 +76,43 @@ export default function Home() {
     const fetchGlobalIssues = async () => {
         if (userSkills.length === 0 && !keywordInput.trim()) return;
         setGlobalLoading(true);
-        // setGlobalIssues([]); // optionally clear old results
         try {
-            // Construct GitHub Search Query
-            const parts = [
-                'is:open',
-                'is:issue',
-                'archived:false',
-                'no:assignee' // Only unassigned issues
-            ];
+            // SIMPLIFIED QUERY: Target high-yield beginner issues
+            const baseQuery = ['is:issue', 'is:open'];
 
-            // Add labels for "opportunity"
-            const difficultyLabels = ['good first issue', 'good-first-issue', 'beginner', 'help wanted', 'up-for-grabs'];
-            parts.push(`(${difficultyLabels.map(l => `label:"${l}"`).join(' OR ')})`);
+            // 1. Beginner Labels Group
+            const labels = ['"good first issue"', 'beginner', '"help wanted"'];
+            baseQuery.push(`label:${labels.join(' OR label:')}`);
 
-            // Add skills/keywords
+            // 2. Skill/Language Filter (use language: if it's a known language, otherwise just text search)
             if (userSkills.length > 0) {
-                // Improve search: search for the skill OR the language
-                const skillQueries = userSkills.map(s => `"${s}" OR language:${s}`);
-                parts.push(`(${skillQueries.join(' OR ')})`);
+                const skillQuery = userSkills.map(s => {
+                    const lang = s.toLowerCase();
+                    // Basic list of common languages to help GitHub filter
+                    const commonLangs = ['javascript', 'typescript', 'python', 'java', 'cpp', 'css', 'html', 'go', 'rust'];
+                    return commonLangs.includes(lang) ? `language:${lang}` : `"${s}"`;
+                }).join(' OR ');
+                baseQuery.push(`(${skillQuery})`);
             }
+
+            // 3. User Keyword
             if (keywordInput.trim()) {
-                parts.push(keywordInput.trim());
+                baseQuery.push(`"${keywordInput.trim()}"`);
             }
 
-            const query = parts.join(' ');
-            console.log("GitHub Search Query:", query); // Debugging
+            const query = baseQuery.join(' ');
+            console.log("GitHub Final Query:", query);
 
-            const encodedQuery = encodeURIComponent(query);
-
-            const res = await fetch(`https://api.github.com/search/issues?q=${encodedQuery}&sort=updated&order=desc&per_page=30`, {
+            const res = await fetch(`https://api.github.com/search/issues?q=${encodeURIComponent(query)}&sort=updated&order=desc&per_page=30`, {
                 cache: 'no-store'
             });
 
             if (!res.ok) {
                 if (res.status === 403 || res.status === 429) {
-                    console.warn("Rate limit exceeded");
-                    alert("GitHub API Rate Limit Exceeded. Please wait a minute and try again."); // Simple feedback
-                    throw new Error("Rate limit exceeded");
+                    alert("GitHub API usage limit reached. Please wait a moment.");
+                    throw new Error("Rate limit");
                 }
-                throw new Error(`GitHub API Error: ${res.status}`);
+                throw new Error(`API error: ${res.status}`);
             }
 
             const data = await res.json();
@@ -124,19 +121,13 @@ export default function Home() {
                 const mappedIssues = data.items.map((item: any) => ({
                     id: item.id,
                     title: item.title,
-                    number: item.number,
                     labels: item.labels,
-                    comments: item.comments,
                     user: item.user,
                     html_url: item.html_url,
-                    body: item.body,
-                    repo_name: item.repository_url.replace('https://api.github.com/repos/', ''),
+                    repo_name: item.repository_url.split('/').slice(-2).join('/'),
                     url: item.html_url
                 }));
                 setGlobalIssues(mappedIssues);
-                if (mappedIssues.length === 0) {
-                    console.log("No issues found for query:", query);
-                }
                 setShowSkillModal(false);
                 setShowGlobalModal(true);
             } else {
@@ -144,9 +135,7 @@ export default function Home() {
             }
 
         } catch (error) {
-            console.error("Error fetching global issues:", error);
-            // Don't clear issues on error if we want to show stale data, 
-            // but for now clearing/showing empty state is safer.
+            console.error("Fetch failed:", error);
             setGlobalIssues([]);
             setShowSkillModal(false);
             setShowGlobalModal(true);
