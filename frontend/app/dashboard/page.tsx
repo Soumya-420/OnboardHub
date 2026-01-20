@@ -370,15 +370,13 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
 
         setLoadingComments(true);
         try {
-            // Check if mock issue (for Safe Mode) or Real
             const [owner, name] = data.repo ? data.repo.split('/') : ["unknown", "unknown"];
-            const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
-
-            // If we are in safe mode or missing repo, use mock logic if desired,
-            // but the backend handles mocking now too.
-            const res = await fetch(`${API_URL}/api/issues/${owner}/${name}/issues/${issue.number}/comments`);
+            // DIRECT FETCH from GitHub API
+            const res = await fetch(`https://api.github.com/repos/${owner}/${name}/issues/${issue.number}/comments`, {
+                cache: 'no-store'
+            });
             const json = await res.json();
-            setActiveComments(json);
+            setActiveComments(Array.isArray(json) ? json : []);
         } catch (e) {
             console.error("Failed to fetch comments", e);
             setActiveComments([]);
@@ -406,40 +404,43 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
     const fetchGlobalIssues = async () => {
         if (userSkills.length === 0) return;
         setGlobalLoading(true);
-        console.log("Starting Global Search with skills:", userSkills);
 
         try {
-            // Construct a search query focused on beginner-friendly issues matching user skills
-            // Group skills with OR inside parentheses
-            const skillQuery = userSkills.length > 0 ? `(${userSkills.map(s => `"${s}"`).join(' OR ')})` : '';
+            // SYNCED WITH LANDING PAGE: High-yield beginner search
+            const baseQuery = ['is:issue', 'is:open'];
 
-            // Broader beginner labels
-            const labelQuery = `(label:"good first issue" OR label:"good-first-issue" OR label:beginner)`;
+            const labels = ['"good first issue"', 'beginner', '"help wanted"'];
+            baseQuery.push(`label:${labels.join(' OR label:')}`);
 
-            const query = `is:issue is:open ${labelQuery} ${skillQuery} no:assignee`;
-            console.log("Generated Query:", query);
+            if (userSkills.length > 0) {
+                const skillQuery = userSkills.map(s => {
+                    const lang = s.toLowerCase();
+                    const commonLangs = ['javascript', 'typescript', 'python', 'java', 'cpp', 'css', 'html', 'go', 'rust'];
+                    return commonLangs.includes(lang) ? `language:${lang}` : `"${s}"`;
+                }).join(' OR ');
+                baseQuery.push(`(${skillQuery})`);
+            }
 
-            const encodedQuery = encodeURIComponent(query);
+            const query = baseQuery.join(' ');
+            console.log("Dashboard Global Search Query:", query);
 
-            const res = await fetch(`https://api.github.com/search/issues?q=${encodedQuery}&sort=updated&order=desc&per_page=10`);
+            const res = await fetch(`https://api.github.com/search/issues?q=${encodeURIComponent(query)}&sort=updated&order=desc&per_page=20`, {
+                cache: 'no-store'
+            });
 
             if (!res.ok) {
-                console.error("GitHub API Error Status:", res.status);
-                // Handle rate limiting or other errors gracefully
                 if (res.status === 403 || res.status === 429) {
-                    throw new Error("GitHub API rate limit exceeded. Please try again later.");
+                    throw new Error("GitHub API rate limit exceeded.");
                 }
-                throw new Error(`GitHub API error: ${res.statusText}`);
+                throw new Error(`GitHub API error: ${res.status}`);
             }
 
             const data = await res.json();
-            console.log("GitHub API Response:", data);
 
             if (data && data.items) {
-                // Transform GitHub API response to our app's internal format
                 const realIssues = data.items.map((item: any) => ({
                     id: item.id,
-                    repo_name: item.repository_url.replace('https://api.github.com/repos/', ''),
+                    repo_name: item.repository_url.split('/').slice(-2).join('/'),
                     title: item.title,
                     body: item.body,
                     labels: item.labels,
@@ -450,22 +451,11 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
                     created_at: item.created_at
                 }));
 
-                if (realIssues.length === 0) {
-                    console.warn("No issues found matching the criteria.");
-                    setError("No matching issues found. Try adding more general skills (e.g., 'JavaScript', 'Python').");
-                    setTimeout(() => setError(""), 5000);
-                }
-
                 setGlobalIssues(realIssues);
                 setShowGlobalModal(true);
-            } else {
-                setGlobalIssues([]);
-                console.error("Invalid response format from GitHub", data);
-                setError("Received invalid data from GitHub.");
             }
         } catch (err) {
-            console.error("Global search failed exception:", err);
-            // Optional: fallback to empty or show error toast
+            console.error("Global search failed:", err);
             setError(err instanceof Error ? err.message : "Failed to fetch global opportunities");
             setTimeout(() => setError(""), 5000);
         } finally {
