@@ -115,35 +115,7 @@ export default function Dashboard() {
         }
     };
 
-    // ULTIMATE SAFE MODE: Generate data client-side if backend fails
-    const generateSafeModeData = (url: string) => {
-        const [_, owner, repo] = url.match(/github\.com\/([^\/]+)\/([^\/]+)/) || ["", "unknown", "project"];
-        return {
-            repo: `${owner}/${repo}`,
-            description: `(Safe Mode) Analysis of ${repo}. Backend unreachable, using simulated insights for reliability.`,
-            stars: Math.floor(Math.random() * 500) + 50,
-            forks: Math.floor(Math.random() * 100) + 10,
-            openIssues: Math.floor(Math.random() * 50) + 5,
-            primaryLanguage: "TypeScript",
-            techStack: ["React", "Node.js", "Tailwind"],
-            packageManager: "npm",
-            setupCommands: ["git clone " + url, "npm install", "npm run dev"],
-            languages: { "TypeScript": 50000, "JavaScript": 20000 },
-            healthScore: 85,
-            healthChecklist: {
-                readme: true,
-                contributing: true,
-                license: true,
-                issues: true,
-                pullRequests: false
-            },
-            mentorReadiness: 95,
-            socialLinks: [
-                { type: 'discord', url: 'https://discord.gg/fallback-demo' },
-                { type: 'slack', url: 'https://slack.com/fallback-demo' }
-            ]
-        };
-    };
+
 
     const analyzeRepo = async (url: string, isDemo: boolean = false) => {
         if (!url) return;
