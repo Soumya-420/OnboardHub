@@ -80,9 +80,34 @@ export default function Dashboard() {
         setIssues([]); // clear old
         try {
             const [owner, name] = repoData.repo.split('/');
-            const res = await fetch(`http://localhost:5000/api/issues?owner=${owner}&repo=${name}&level=${selectedLevel}`);
-            const json = await res.json();
-            setIssues(json);
+
+            // Map levels to labels
+            let labels = "";
+            if (selectedLevel === 'beginner') labels = 'label:"good first issue",label:"good-first-issue",label:beginner';
+            else if (selectedLevel === 'intermediate') labels = 'label:help-wanted,label:enhancement';
+            else labels = 'label:bug,label:complex';
+
+            // Construct query
+            const query = `repo:${owner}/${name} is:issue is:open ${labels.split(',').join(' OR ')}`;
+            const encodedQuery = encodeURIComponent(query);
+
+            const res = await fetch(`https://api.github.com/search/issues?q=${encodedQuery}&sort=updated&order=desc&per_page=10`);
+            const data = await res.json();
+
+            if (data && data.items) {
+                const mappedIssues = data.items.map((item: any) => ({
+                    id: item.id,
+                    title: item.title,
+                    number: item.number,
+                    labels: item.labels,
+                    comments: item.comments,
+                    user: item.user,
+                    html_url: item.html_url,
+                    body: item.body,
+                    repo_name: `${owner}/${name}` // Add repo name for consistency
+                }));
+                setIssues(mappedIssues);
+            }
         } catch (e) {
             console.error("Issue fetch error", e);
         } finally {
@@ -122,38 +147,98 @@ export default function Dashboard() {
 
     const analyzeRepo = async (url: string, isDemo: boolean = false) => {
         if (!url) return;
+
+        // Extract owner/repo
+        const match = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+        if (!match) {
+            setError("Invalid GitHub URL");
+            return;
+        }
+        const [_, owner, repo] = match;
+        const fullRepo = `${owner}/${repo}`;
+
         setLoading(true);
-        setError(""); // Clear previous error
+        setError("");
         setData(null);
         setIssues([]);
 
         try {
-            // Attempt Real Analysis
-            const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
-            const res = await fetch(`${API_URL}/api/analyze`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ repoUrl: url, isDemo }),
-            });
-            const result = await res.json();
-            if (result.error) throw new Error(result.error);
-            setData(result);
+            // 1. Fetch Repo Details
+            const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+            if (!repoRes.ok) throw new Error("Repository not found (or API limit reached)");
+            const repoData = await repoRes.json();
 
-            // Initial fetch for beginner issues
-            await fetchIssues(result, "beginner");
+            // 2. Fetch Languages
+            const langRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/languages`);
+            const languages = await langRes.json();
+
+            // 3. Fetch Community Profile (for health checks) - handling 404 gracefully
+            let communityData: any = {};
+            try {
+                const commRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/community/profile`);
+                if (commRes.ok) communityData = await commRes.json();
+            } catch (e) { console.warn("Community profile fetch failed", e); }
+
+            // Calculate Health Score
+            const files = communityData.files || {};
+            const hasReadme = !!files.readme;
+            const hasContributing = !!files.contributing;
+            const hasLicense = !!files.license || !!repoData.license;
+            const hasDescription = !!repoData.description;
+
+            let healthScore = 50; // Base
+            if (hasReadme) healthScore += 20;
+            if (hasContributing) healthScore += 15;
+            if (hasLicense) healthScore += 10;
+            if (hasDescription) healthScore += 5;
+
+            // Calculate Mentor Readiness (Heuristic based on activity)
+            // More stars & forks usually implies more structure, but we want "Mentor" activity.
+            // Using open issues count and updated_at as proxies for liveness.
+            const daysSinceUpdate = (new Date().getTime() - new Date(repoData.updated_at).getTime()) / (1000 * 3600 * 24);
+            let mentorReadiness = 50;
+            if (daysSinceUpdate < 7) mentorReadiness += 30;
+            else if (daysSinceUpdate < 30) mentorReadiness += 20;
+            else if (daysSinceUpdate < 90) mentorReadiness += 10;
+
+            if (repoData.open_issues_count > 10) mentorReadiness += 10;
+            if (repoData.has_wiki) mentorReadiness += 10;
+
+            mentorReadiness = Math.min(mentorReadiness, 100);
+
+
+            const result = {
+                repo: fullRepo,
+                description: repoData.description || "No description provided.",
+                stars: repoData.stargazers_count,
+                forks: repoData.forks_count,
+                openIssues: repoData.open_issues_count,
+                primaryLanguage: repoData.language || "N/A",
+                techStack: Object.keys(languages).slice(0, 5),
+                packageManager: languages.TypeScript || languages.JavaScript ? "npm" : "git", // Simple heuristic
+                setupCommands: ["git clone " + url, "npm install", "npm run dev"], // Generic fallback
+                languages: languages,
+                healthScore: healthScore,
+                healthChecklist: {
+                    readme: hasReadme,
+                    contributing: hasContributing,
+                    license: hasLicense,
+                    issues: repoData.has_issues,
+                    pullRequests: true // API doesn't strictly say enabled/disabled easily without another call
+                },
+                mentorReadiness: mentorReadiness,
+                socialLinks: [] // GitHub API doesn't provide these easily, leaving empty for now
+            };
+
+            setData(result);
             saveToRecent(url);
 
+            // Fetch initial issues (Beginner)
+            await fetchIssues(result, "beginner");
+
         } catch (error) {
-            console.error("Backend failed, switching to Client-Side Safe Mode 🛡️:", error);
-            // FALLBACK: Use Client-Side Mock Data
-            const safeData = generateSafeModeData(url);
-            setData(safeData);
-            // Mock issues for Safe Mode
-            setIssues([
-                { id: 1, title: "Fix typo in README", number: 101, labels: [{ name: "good first issue" }], comments: 2, user: { login: "octocat", avatar_url: "https://github.com/octocat.png" }, html_url: "https://github.com" },
-                { id: 2, title: "Update dependency versions", number: 102, labels: [{ name: "dependencies" }], comments: 5, user: { login: "dependabot", avatar_url: "https://avatars.githubusercontent.com/in/29110" }, html_url: "https://github.com" },
-                { id: 3, title: "Add loading spinner to button", number: 103, labels: [{ name: "ui" }], comments: 0, user: { login: "user123", avatar_url: "https://github.com/ghost.png" }, html_url: "https://github.com" }
-            ]);
+            console.error("Analysis failed:", error);
+            setError(error instanceof Error ? error.message : "Failed to analyze repository");
         } finally {
             setLoading(false);
         }
