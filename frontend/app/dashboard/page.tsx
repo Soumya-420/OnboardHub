@@ -350,21 +350,49 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
         if (userSkills.length === 0) return;
         setGlobalLoading(true);
         try {
-            const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
-            const res = await fetch(`${API_URL}/api/issues/global`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ skills: userSkills }),
-            });
+            // Construct a search query focused on beginner-friendly issues matching user skills
+            const skillQuery = userSkills.map(s => `"${s}"`).join(' OR ');
+            const query = `is:issue is:open label:"good first issue" ${skillQuery} no:assignee`;
+            const encodedQuery = encodeURIComponent(query);
+            
+            const res = await fetch(`https://api.github.com/search/issues?q=${encodedQuery}&sort=updated&order=desc&per_page=10`);
+            
+            if (!res.ok) {
+                // Handle rate limiting or other errors gracefully
+                if (res.status === 403 || res.status === 429) {
+                     throw new Error("GitHub API rate limit exceeded. Please try again later.");
+                }
+                throw new Error(`GitHub API error: ${res.statusText}`);
+            }
+
             const data = await res.json();
-            if (Array.isArray(data)) {
-                setGlobalIssues(data);
+            
+            if (data && data.items) {
+                // Transform GitHub API response to our app's internal format
+                const realIssues = data.items.map((item: any) => ({
+                    id: item.id,
+                    repo_name: item.repository_url.replace('https://api.github.com/repos/', ''),
+                    title: item.title,
+                    body: item.body,
+                    labels: item.labels,
+                    url: item.html_url,
+                    comments: item.comments,
+                    number: item.number,
+                    user: item.user,
+                    created_at: item.created_at
+                }));
+                
+                setGlobalIssues(realIssues);
                 setShowGlobalModal(true);
             } else {
-                console.error("Invalid response format", data);
+                setGlobalIssues([]);
+                console.error("Invalid response format from GitHub", data);
             }
         } catch (err) {
             console.error("Global search failed", err);
+            // Optional: fallback to empty or show error toast
+             setError(err instanceof Error ? err.message : "Failed to fetch global opportunities");
+             setTimeout(() => setError(""), 5000);
         } finally {
             setGlobalLoading(false);
         }
