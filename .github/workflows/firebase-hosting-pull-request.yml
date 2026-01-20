@@ -27,3 +27,4 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ONBOARDHUB_55861920_512BE }}
           projectId: onboardhub-55861920-512be
+          entryPoint: ./frontend
