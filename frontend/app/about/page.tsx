@@ -24,7 +24,7 @@ export default function About() {
 
                 {/* Hero Section */}
                 <div className="text-center mb-16 space-y-4">
-                    <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-400">
+                    <h1 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-400">
                         Why OnboardHub?
                     </h1>
                     <p className="text-xl text-gray-400 max-w-2xl mx-auto">

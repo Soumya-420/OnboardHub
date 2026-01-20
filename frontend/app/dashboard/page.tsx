@@ -819,12 +819,12 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
 
                                 {/* Issues List */}
                                 <div className="lg:col-span-2 bg-black/20 border border-white/5 rounded-3xl p-6 md:p-8 flex flex-col min-h-[600px]">
-                                    <div className="flex items-center justify-between mb-8">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                                         <h2 className="text-xl font-bold flex items-center gap-2 text-white">
                                             <Layers className="w-5 h-5 text-gray-400" />
                                             Issue Finder
                                         </h2>
-                                        <div className="flex bg-black/50 p-1 rounded-xl border border-white/5 gap-1">
+                                        <div className="flex flex-wrap bg-black/50 p-1 rounded-xl border border-white/5 gap-1">
                                             <button
                                                 onClick={() => setShowMatchesOnly(!showMatchesOnly)}
                                                 className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all flex items-center gap-1.5 ${showMatchesOnly ? 'bg-blue-500 text-white shadow shadow-blue-500/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
