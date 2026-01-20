@@ -21,7 +21,7 @@ export const MagnifiedHeading = ({ text, isDemo }: MagnifiedHeadingProps) => {
     if (isDemo) {
         return (
             <motion.h1
-                className="text-5xl md:text-6xl font-bold text-center tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-orange-500 to-rose-600 drop-shadow-[0_0_25px_rgba(245,158,11,0.8)]"
+                className="text-3xl md:text-6xl font-bold text-center tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-orange-500 to-rose-600 drop-shadow-[0_0_25px_rgba(245,158,11,0.8)]"
                 animate={{ opacity: [1, 0.6, 1] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             >
@@ -33,7 +33,7 @@ export const MagnifiedHeading = ({ text, isDemo }: MagnifiedHeadingProps) => {
     return (
         <div className="relative inline-block py-2 px-8 select-none group">
             {/* Base Layer (Standard Text) */}
-            <h1 className="text-5xl md:text-6xl font-bold text-center tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 opacity-30 blur-[1px]">
+            <h1 className="text-3xl md:text-6xl font-bold text-center tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 opacity-30 blur-[1px]">
                 {text}
             </h1>
 
@@ -76,7 +76,7 @@ const MaskedOverlay = ({ text, isDemo, transition }: any) => {
             }}
             transition={transition}
         >
-            <h1 className="text-5xl md:text-6xl font-bold text-center tracking-tight scale-110 origin-center bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-400 via-purple-500 to-indigo-500 drop-shadow-[0_0_25px_rgba(217,70,239,0.8)]">
+            <h1 className="text-3xl md:text-6xl font-bold text-center tracking-tight scale-110 origin-center bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-400 via-purple-500 to-indigo-500 drop-shadow-[0_0_25px_rgba(217,70,239,0.8)]">
                 {text}
             </h1>
         </motion.div>
