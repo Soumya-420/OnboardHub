@@ -15,8 +15,8 @@ export const TypewriterHero = () => {
         <motion.span
             animate={{ opacity: [1, 0, 1] }}
             transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-            className="inline-block w-2 md:w-3 h-12 md:h-20 bg-blue-500 ml-1 align-middle shadow-[0_0_15px_rgba(59,130,246,0.8)]"
-            style={{ marginBottom: "8px" }}
+            className="inline-block w-2 md:w-3 h-8 md:h-20 bg-blue-500 ml-1 align-middle shadow-[0_0_15px_rgba(59,130,246,0.8)]"
+            style={{ marginBottom: "4px" }}
         />
     );
 
@@ -58,7 +58,7 @@ export const TypewriterHero = () => {
     }, []);
 
     return (
-        <h1 className="text-7xl md:text-8xl font-bold tracking-tight text-balance leading-tight mb-8 min-h-[350px] md:min-h-[auto] flex flex-col items-center justify-center">
+        <h1 className="text-4xl md:text-7xl lg:text-8xl font-bold tracking-tight text-balance leading-tight mb-8 min-h-[350px] md:min-h-[auto] flex flex-col items-center justify-center">
             {/* Line 1 */}
             <span className="block text-white h-[1.2em]">
                 {line1}

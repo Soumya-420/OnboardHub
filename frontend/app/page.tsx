@@ -165,7 +165,7 @@ I am eager to contribute to ${repoName.split('/')[1] || repoName}. My skills in 
 
 
     return (
-        <div className="flex min-h-screen flex-col bg-black text-white overflow-hidden relative selection:bg-blue-500/30">
+        <div className="flex min-h-screen flex-col bg-black text-white overflow-x-hidden relative selection:bg-blue-500/30">
 
             {/* Smooth Navbar */}
             <nav className="fixed top-0 w-full z-50 px-6 py-4 flex flex-col md:flex-row justify-between items-center backdrop-blur-md bg-black/20 border-b border-white/5 gap-4 md:gap-0">
