@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
     ArrowLeft, Github, Terminal, BookOpen, AlertCircle,
     Loader2, Star, GitFork, Disc, Layers, ShieldCheck, Users, Sparkles,
-    MessageSquare, Info, ExternalLink, ChevronDown, X, Zap, Globe, Search, Rocket
+    MessageSquare, Info, ExternalLink, ChevronDown, X, Zap, Search, Rocket
 } from "lucide-react";
 import { BeginnerReadinessCard } from '../../components/BeginnerReadinessCard';
 import { MagnifiedHeading } from '../../components/MagnifiedHeading';
@@ -32,7 +32,6 @@ export default function Dashboard() {
 
     // Skills Profiler State
     const [userSkills, setUserSkills] = useState<string[]>(["React", "TypeScript", "Tailwind"]);
-    const [skillInput, setSkillInput] = useState("");
 
     const [showMatchesOnly, setShowMatchesOnly] = useState(false);
     const [isDemoMode, setIsDemoMode] = useState(false);
@@ -306,18 +305,6 @@ export default function Dashboard() {
         }
     };
 
-    const addSkill = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && skillInput.trim()) {
-            if (!userSkills.includes(skillInput.trim())) {
-                setUserSkills([...userSkills, skillInput.trim()]);
-            }
-            setSkillInput("");
-        }
-    };
-
-    const removeSkill = (skill: string) => {
-        setUserSkills(userSkills.filter(s => s !== skill));
-    };
 
     const generateProposal = (issue: any) => {
         const suggestions = getSuggestions(issue, level);
@@ -395,73 +382,7 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
         }
     };
 
-    // Global Search State
-    const [showGlobalModal, setShowGlobalModal] = useState(false);
-    const [showSkillModal, setShowSkillModal] = useState(false);
-    const [globalIssues, setGlobalIssues] = useState<any[]>([]);
-    const [globalLoading, setGlobalLoading] = useState(false);
 
-    const fetchGlobalIssues = async () => {
-        if (userSkills.length === 0) return;
-        setGlobalLoading(true);
-
-        try {
-            // SYNCED WITH LANDING PAGE: High-yield beginner search
-            const baseQuery = ['is:issue', 'is:open', 'archived:false'];
-
-            const labelsPool = ['"good first issue"', 'beginner', '"help wanted"', 'up-for-grabs'];
-            baseQuery.push(`label:${labelsPool.join(',')}`);
-
-            if (userSkills.length > 0) {
-                const skillQuery = userSkills.map(s => {
-                    const lang = s.toLowerCase();
-                    const commonLangs = ['javascript', 'typescript', 'python', 'java', 'cpp', 'css', 'html', 'go', 'rust'];
-                    return commonLangs.includes(lang) ? `language:${lang}` : `"${s}"`;
-                }).join(' OR ');
-                baseQuery.push(`(${skillQuery})`);
-            }
-
-            const query = baseQuery.join(' ');
-            console.log("Dashboard Global Search Query:", query);
-
-            const res = await fetch(`https://api.github.com/search/issues?q=${encodeURIComponent(query)}&sort=updated&order=desc&per_page=20`, {
-                cache: 'no-store'
-            });
-
-            if (!res.ok) {
-                if (res.status === 403 || res.status === 429) {
-                    throw new Error("GitHub API rate limit exceeded.");
-                }
-                throw new Error(`GitHub API error: ${res.status}`);
-            }
-
-            const data = await res.json();
-
-            if (data && data.items) {
-                const realIssues = data.items.map((item: any) => ({
-                    id: item.id,
-                    repo_name: item.repository_url.split('/').slice(-2).join('/'),
-                    title: item.title,
-                    body: item.body,
-                    labels: item.labels,
-                    url: item.html_url,
-                    comments: item.comments,
-                    number: item.number,
-                    user: item.user,
-                    created_at: item.created_at
-                }));
-
-                setGlobalIssues(realIssues);
-                setShowGlobalModal(true);
-            }
-        } catch (err) {
-            console.error("Global search failed:", err);
-            setError(err instanceof Error ? err.message : "Failed to fetch global opportunities");
-            setTimeout(() => setError(""), 5000);
-        } finally {
-            setGlobalLoading(false);
-        }
-    };
 
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(proposalContent);
@@ -529,18 +450,6 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
                         </div>
 
 
-                        {/* Global Search Trigger Button */}
-                        {!isDemoMode && (
-                            <div className="w-full max-w-xl mx-auto mt-8 relative z-30">
-                                <button
-                                    onClick={() => setShowSkillModal(true)}
-                                    className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl text-lg font-bold text-white shadow-xl shadow-blue-500/20 hover:scale-105 hover:shadow-purple-500/40 transition-all group"
-                                >
-                                    <Globe className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-                                    Global Opportunity Finder (No Repo Required)
-                                </button>
-                            </div>
-                        )}
 
                         {/* Recent History (Hackathon Polish) */}
                         {recentRepos.length > 0 && !loading && !data && (
@@ -560,139 +469,7 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
                     </div>
                 </motion.div>
 
-                {/* Skills Profiler (Phase 4) */}
 
-                <AnimatePresence>
-                    {showSkillModal && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.9, opacity: 0 }}
-                                className="w-full max-w-xl bg-[#0a0a0a] border border-white/10 rounded-3xl p-6 shadow-2xl"
-                            >
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                        <Users className="w-5 h-5 text-blue-400" /> Candidate Profile
-                                    </h2>
-                                    <button onClick={() => setShowSkillModal(false)} className="p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white">
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                </div>
-                                <p className="text-gray-400 text-sm mb-4">Add your skills to find the perfect matched issues across GitHub.</p>
-
-                                <div className="bg-white/5 border border-white/10 rounded-xl p-4 min-h-[100px] mb-6">
-                                    <div className="flex flex-wrap gap-2 mb-2">
-                                        {userSkills.map(skill => (
-                                            <span key={skill} className="px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full text-xs text-blue-300 flex items-center gap-2">
-                                                {skill}
-                                                <button onClick={() => removeSkill(skill)} className="hover:text-white"><X className="w-3 h-3" /></button>
-                                            </span>
-                                        ))}
-                                        <input
-                                            type="text"
-                                            placeholder="Type skill & press Enter..."
-                                            value={skillInput}
-                                            onChange={(e) => setSkillInput(e.target.value)}
-                                            onKeyDown={addSkill}
-                                            className="bg-transparent text-sm text-white focus:outline-none min-w-[150px] py-1"
-                                            autoFocus
-                                        />
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={() => { setShowSkillModal(false); fetchGlobalIssues(); }}
-                                    disabled={globalLoading || userSkills.length === 0}
-                                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-bold text-white shadow-lg hover:shadow-blue-500/20 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                >
-                                    {globalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
-                                    Find Matching Issues
-                                </button>
-                            </motion.div>
-                        </div>
-                    )}
-                </AnimatePresence>
-
-                { /* Global Issues Modal */}
-                <AnimatePresence>
-                    {showGlobalModal && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.9, opacity: 0 }}
-                                className="w-full max-w-4xl bg-[#0a0a0a] border border-white/10 rounded-3xl overflow-hidden max-h-[85vh] flex flex-col shadow-2xl"
-                            >
-                                <div className="p-6 border-b border-white/10 flex items-center justify-between bg-white/5">
-                                    <div>
-                                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                            <Globe className="w-5 h-5 text-purple-400" />
-                                            Global Opportunity Finder
-                                        </h2>
-                                        <p className="text-xs text-gray-400 mt-1">Found {globalIssues.length} issues across GitHub matching your profile.</p>
-                                    </div>
-                                    <button onClick={() => setShowGlobalModal(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                                        <X className="w-5 h-5 text-gray-400" />
-                                    </button>
-                                </div>
-
-                                <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                                    {globalIssues.map(issue => (
-                                        <div key={issue.id} className="bg-white/5 border border-white/5 rounded-xl p-5 hover:border-purple-500/30 transition-all group">
-                                            <div className="flex justify-between items-start gap-4">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <span className="text-[10px] font-mono text-gray-500">{issue.repo_name}</span>
-                                                        <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
-                                                        <div className="flex gap-1">
-                                                            {issue.labels.slice(0, 3).map((l: any, i: number) => (
-                                                                <span key={i} className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-white/10 text-gray-300">
-                                                                    {l.name}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                    <h3 className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors mb-2">
-                                                        {issue.title}
-                                                    </h3>
-                                                    <p className="text-xs text-gray-400 line-clamp-2 mb-3">{issue.body || "No description provided."}</p>
-
-                                                    {/* Smart Match Bar */}
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex h-1 w-24 bg-white/5 rounded-full overflow-hidden">
-                                                            <div className="h-full bg-gradient-to-r from-purple-500 to-indigo-500" style={{ width: `${getMatchScore(issue)}%` }}></div>
-                                                        </div>
-                                                        <span className="text-[9px] font-bold text-purple-400">{getMatchScore(issue)}% SKILL MATCH</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex flex-col items-end gap-2">
-                                                    <a
-                                                        href={issue.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="px-3 py-1.5 bg-purple-500/10 text-purple-300 border border-purple-500/20 rounded-lg text-xs font-bold hover:bg-purple-500 hover:text-white transition-all flex items-center gap-1.5"
-                                                    >
-                                                        View Issue <ExternalLink className="w-3 h-3" />
-                                                    </a>
-                                                    <button
-                                                        onClick={() => generateProposal(issue)}
-                                                        className="px-3 py-1.5 bg-blue-500/10 text-blue-300 border border-blue-500/20 rounded-lg text-xs font-bold hover:bg-blue-500 hover:text-white transition-all flex items-center gap-1.5"
-                                                    >
-                                                        <Sparkles className="w-3 h-3" /> Draft Application
-                                                    </button>
-                                                    <div className="flex items-center gap-1 text-[10px] text-gray-500">
-                                                        <MessageSquare className="w-3 h-3" /> {issue.comments}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        </div>
-                    )}
-                </AnimatePresence>
 
                 {/* Error Banner */}
                 <AnimatePresence>
