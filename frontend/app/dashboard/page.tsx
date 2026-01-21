@@ -44,9 +44,9 @@ export default function Dashboard() {
 
         if (demo === "true") {
             setIsDemoMode(true);
-            setRepoUrl("https://github.com/demo/starter-kit");
+            setRepoUrl("https://github.com/firstcontributions/first-contributions");
             setTimeout(() => {
-                analyzeRepo("https://github.com/demo/starter-kit", true);
+                analyzeRepo("https://github.com/firstcontributions/first-contributions", true);
             }, 500);
         } else if (repo) {
             setRepoUrl(repo);
@@ -118,6 +118,7 @@ export default function Dashboard() {
 
 
     const analyzeRepo = async (url: string, isDemo: boolean = false) => {
+        setIsDemoMode(isDemo);
         if (!url) return;
 
         // Extract owner/repo
