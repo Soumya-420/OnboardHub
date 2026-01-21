@@ -80,9 +80,9 @@ export default function Home() {
             // SIMPLIFIED QUERY: Target high-yield beginner issues
             const baseQuery = ['is:issue', 'is:open', 'archived:false'];
 
-            // 1. Beginner Labels Group (Parenthesized for correct OR logic)
-            const labels = ['"good first issue"', 'beginner', '"help wanted"', 'up-for-grabs'];
-            baseQuery.push(`(${labels.map(l => `label:${l}`).join(' OR ')})`);
+            // 1. Beginner Labels Group (Comma separated for correct API OR logic)
+            const labelsPool = ['"good first issue"', 'beginner', '"help wanted"', 'up-for-grabs'];
+            baseQuery.push(`label:${labelsPool.join(',')}`);
 
             // 2. Skill/Language Filter
             if (userSkills.length > 0) {
