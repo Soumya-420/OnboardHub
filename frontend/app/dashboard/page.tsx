@@ -80,14 +80,15 @@ export default function Dashboard() {
         try {
             const [owner, name] = repoData.repo.split('/');
 
-            // Map levels to labels
+            // Map levels to labels (Comma-separated for robust API OR logic)
             let labels = "";
-            if (selectedLevel === 'beginner') labels = 'label:"good first issue",label:"good-first-issue",label:beginner';
-            else if (selectedLevel === 'intermediate') labels = 'label:help-wanted,label:enhancement';
-            else labels = 'label:bug,label:complex';
+            if (selectedLevel === 'beginner') labels = '"good first issue",beginner,up-for-grabs';
+            else if (selectedLevel === 'intermediate') labels = 'help-wanted,enhancement';
+            else labels = 'bug,complex';
 
             // Construct query
-            const query = `repo:${owner}/${name} is:issue is:open ${labels.split(',').join(' OR ')}`;
+            const query = `repo:${owner}/${name} is:issue is:open label:${labels}`;
+            console.log("Dashboard Issue Search Query:", query);
             const encodedQuery = encodeURIComponent(query);
 
             const res = await fetch(`https://api.github.com/search/issues?q=${encodedQuery}&sort=updated&order=desc&per_page=10`);
