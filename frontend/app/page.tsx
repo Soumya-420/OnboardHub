@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { TypewriterHero } from "../components/TypewriterHero";
 import { BeginnerReadinessCard } from "../components/BeginnerReadinessCard";
-import { Rocket, Link as LinkIcon, Search, Target, ChevronDown, Globe, Users, X, Loader2, Sparkles, ExternalLink, MessageSquare, BookOpen, Zap, Info, GitFork, AlertCircle } from "lucide-react";
+import { Rocket, Link as LinkIcon, Search, Target, ChevronDown, Globe, Users, X, Loader2, Sparkles, ExternalLink, MessageSquare, BookOpen, Zap, Info, GitFork, AlertCircle, ShieldCheck, Layers, Cpu } from "lucide-react";
 import { useState, useEffect } from "react";
 import "./globals.css";
 
@@ -85,18 +85,6 @@ export default function Home() {
             template: `## What does this PR do?\nFixes #${issue.number || 'issue-number'}\n\n## Verification\n- [ ] Ran locally\n- [ ] Tests pass`
         };
 
-        let meeting = {
-            talkingPoints: [
-                "Summarize the goal of the PR in one sentence.",
-                "Mention any technical hurdles encountered and how they were solved.",
-                "Ask for feedback on specific lines of code (be precise)."
-            ],
-            questions: [
-                "Does this align with the project's long-term vision?",
-                "Are there existing tests I should run or update for this?",
-                "Are there specific edge cases I should focus on during verification?"
-            ]
-        };
 
         let specific = {
             files: "src/...",
@@ -114,7 +102,7 @@ export default function Home() {
             base.commit = `git commit -m "docs: update README details"`;
         }
 
-        return { ...base, ...specific, meeting, tip: "Don't forget to star the repo!" };
+        return { ...base, ...specific, tip: "Don't forget to star the repo!" };
     };
 
     const fetchGlobalIssues = async () => {
@@ -392,14 +380,38 @@ I am eager to contribute to ${repoName.split('/')[1] || repoName}. My skills in 
 
 
                 {/* Workflow Section */}
-                <section className="w-full max-w-6xl">
-                    <h2 className="text-4xl font-bold text-center mb-16 text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-600">How OnboardHub Works</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <section className="w-full max-w-6xl mb-32 relative">
+                    <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent hidden md:block -z-10"></div>
+
+                    <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500">How OnboardHub Works</h2>
+                    <p className="text-gray-500 text-center mb-16 max-w-2xl mx-auto">Our automated engine streamlines the entire contribution lifecycle, from discovery to merge.</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                         {[
-                            { icon: <LinkIcon className="w-6 h-6 text-blue-400" />, title: "Drop a Link", desc: "Paste any GitHub URL. We handle the rest." },
-                            { icon: <Search className="w-6 h-6 text-purple-400" />, title: "We Scan It", desc: "Detects languages, frameworks, and doc quality." },
-                            { icon: <Target className="w-6 h-6 text-green-400" />, title: "Get Matched", desc: "Find issues that actually match your skill level." },
-                            { icon: <Rocket className="w-6 h-6 text-yellow-400" />, title: "Ship Code", desc: "Follow the step-by-step roadmap to merge." }
+                            {
+                                icon: <LinkIcon className="w-6 h-6 text-blue-400" />,
+                                title: "1. Drop a Link",
+                                desc: "Paste any GitHub repository URL. Our engine immediately begins a deep traversal of the codebase architecture.",
+                                color: "blue"
+                            },
+                            {
+                                icon: <Search className="w-6 h-6 text-purple-400" />,
+                                title: "2. We Scan It",
+                                desc: "We analyze tech stacks, documentation completeness, and issue velocity to build a comprehensive health profile.",
+                                color: "purple"
+                            },
+                            {
+                                icon: <Target className="w-6 h-6 text-green-400" />,
+                                title: "3. Get Matched",
+                                desc: "Our matching algorithm correlates your unique skill profile with issue complexity and mentor availability.",
+                                color: "green"
+                            },
+                            {
+                                icon: <Rocket className="w-6 h-6 text-yellow-400" />,
+                                title: "4. Ship Code",
+                                desc: "Get a personalized roadmap with CLI commands, file contexts, and PR templates tailored to the specific task.",
+                                color: "yellow"
+                            }
                         ].map((item, i) => (
                             <motion.div
                                 key={i}
@@ -407,16 +419,64 @@ I am eager to contribute to ${repoName.split('/')[1] || repoName}. My skills in 
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ delay: i * 0.1 }}
-                                whileHover={{ y: -5 }}
-                                className="bg-white/5 p-8 rounded-2xl border border-white/5 hover:border-white/10 hover:bg-white/10 transition-all group"
+                                whileHover={{ y: -10 }}
+                                className="relative bg-black/40 backdrop-blur-sm p-8 rounded-3xl border border-white/5 hover:border-white/20 hover:bg-white/[0.02] transition-all group"
                             >
-                                <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform border border-white/5">
+                                <div className={`w-14 h-14 bg-${item.color}-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform border border-${item.color}-500/20 shadow-lg shadow-${item.color}-500/5`}>
                                     {item.icon}
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-3">{item.title}</h3>
-                                <p className="text-gray-400 leading-relaxed text-sm">{item.desc}</p>
+                                <h3 className="text-xl font-bold text-white mb-4 group-hover:text-blue-400 transition-colors">{item.title}</h3>
+                                <p className="text-gray-400 leading-relaxed text-sm group-hover:text-gray-300 transition-colors">{item.desc}</p>
+
+                                {/* Connector Dot for Desktop */}
+                                <div className="hidden md:block absolute top-1/2 -right-4 w-2 h-2 rounded-full bg-white/10 group-last:hidden"></div>
                             </motion.div>
                         ))}
+                    </div>
+                </section>
+
+                {/* Features Section */}
+                <section className="w-full max-w-6xl mb-32">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                        <div className="space-y-6">
+                            <h2 className="text-4xl font-bold text-white leading-tight">
+                                Built for the <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600">Next Generation</span> of Contributors
+                            </h2>
+                            <p className="text-gray-400 text-lg">
+                                We've removed the manual overhead of open source. Focus on writing code, not wrestling with documentation or environment setup.
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {[
+                                    { icon: <Zap className="w-5 h-5" />, text: "Instant Repo Analysis" },
+                                    { icon: <ShieldCheck className="w-5 h-5" />, text: "Quality Scoring" },
+                                    { icon: <Layers className="w-5 h-5" />, text: "Smart Skill Matching" },
+                                    { icon: <Cpu className="w-5 h-5" />, text: "automated Roadmaps" }
+                                ].map((feature, i) => (
+                                    <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
+                                        <div className="text-blue-400">{feature.icon}</div>
+                                        <span className="text-sm text-gray-300 font-medium">{feature.text}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="relative">
+                            <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-3xl rounded-full"></div>
+                            <div className="relative bg-gradient-to-br from-white/10 to-white/5 border border-white/10 p-1 rounded-[2.5rem] overflow-hidden shadow-2xl">
+                                <div className="bg-[#0a0a0a] rounded-[2.25rem] p-8 aspect-square flex flex-col justify-center items-center text-center">
+                                    <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                                        <Rocket className="w-10 h-10 text-blue-400" />
+                                    </div>
+                                    <h4 className="text-2xl font-bold text-white mb-2 text-balance">Ready to Start Your Journey?</h4>
+                                    <p className="text-gray-500 mb-8">Join thousands of developers contributing to the world's most popular repositories.</p>
+                                    <button
+                                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                        className="px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform"
+                                    >
+                                        Analyze a Repo Now
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -644,33 +704,6 @@ I am eager to contribute to ${repoName.split('/')[1] || repoName}. My skills in 
                                                                             <span className="truncate mr-2">{getSuggestions(issue).commit}</span>
                                                                             <CopyButton text={getSuggestions(issue).commit} />
                                                                         </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="pt-4 border-t border-white/5 grid md:grid-cols-2 gap-4">
-                                                                    <div>
-                                                                        <h4 className="text-[10px] font-bold text-blue-400 mb-2 uppercase flex items-center gap-2">
-                                                                            <MessageSquare className="w-3 h-3" /> Talking Points
-                                                                        </h4>
-                                                                        <ul className="space-y-1">
-                                                                            {getSuggestions(issue).meeting.talkingPoints.map((point: string, idx: number) => (
-                                                                                <li key={idx} className="text-[10px] text-gray-400 flex gap-2">
-                                                                                    <span className="text-blue-500/50">•</span> {point}
-                                                                                </li>
-                                                                            ))}
-                                                                        </ul>
-                                                                    </div>
-                                                                    <div>
-                                                                        <h4 className="text-[10px] font-bold text-purple-400 mb-2 uppercase flex items-center gap-2">
-                                                                            <BookOpen className="w-3 h-3" /> Questions
-                                                                        </h4>
-                                                                        <ul className="space-y-1">
-                                                                            {getSuggestions(issue).meeting.questions.map((q: string, idx: number) => (
-                                                                                <li key={idx} className="text-[10px] text-gray-400 flex gap-2">
-                                                                                    <span className="text-purple-500/50">?</span> {q}
-                                                                                </li>
-                                                                            ))}
-                                                                        </ul>
                                                                     </div>
                                                                 </div>
                                                             </div>

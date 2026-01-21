@@ -240,19 +240,6 @@ export default function Dashboard() {
             template: `## What does this PR do?\nFixes #${issue.number}\n\n## Verification\n- [ ] Ran locally\n- [ ] Tests pass`
         };
 
-        // PR Meeting Guidance
-        let meeting = {
-            talkingPoints: [
-                "Summarize the goal of the PR in one sentence.",
-                "Mention any technical hurdles encountered and how they were solved.",
-                "Ask for feedback on specific lines of code (be precise)."
-            ],
-            questions: [
-                "Does this align with the project's long-term vision?",
-                "Are there existing tests I should run or update for this?",
-                "Are there specific edge cases I should focus on during verification?"
-            ]
-        };
 
         // Context-aware logic
         let specific = {
@@ -289,7 +276,7 @@ export default function Dashboard() {
             }
         }
 
-        return { ...base, ...specific, meeting, tip: "Don't forget to star the repo!" };
+        return { ...base, ...specific, tip: "Don't forget to star the repo!" };
     };
 
     // Skills Matching Logic
@@ -910,42 +897,6 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
                                                                                 </div>
                                                                             </div>
 
-                                                                            <div className="flex gap-4">
-                                                                                <div className="flex flex-col items-center">
-                                                                                    <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-orange-500/20 text-balance">5</div>
-                                                                                </div>
-                                                                                <div className="flex-1">
-                                                                                    <h4 className="text-sm font-bold text-white mb-2">Maintainer Sync</h4>
-                                                                                    <div className="bg-blue-500/5 rounded-lg p-4 border border-blue-500/20">
-                                                                                        <div className="grid md:grid-cols-2 gap-6">
-                                                                                            <div>
-                                                                                                <h4 className="text-[10px] font-bold text-blue-400 mb-2 uppercase flex items-center gap-2">
-                                                                                                    <Sparkles className="w-3 h-3" /> Talking Points
-                                                                                                </h4>
-                                                                                                <ul className="space-y-1">
-                                                                                                    {getSuggestions(issue, level).meeting.talkingPoints.map((point: string, idx: number) => (
-                                                                                                        <li key={idx} className="text-[10px] text-gray-300 flex gap-2">
-                                                                                                            <span className="text-blue-500">•</span> {point}
-                                                                                                        </li>
-                                                                                                    ))}
-                                                                                                </ul>
-                                                                                            </div>
-                                                                                            <div>
-                                                                                                <h4 className="text-[10px] font-bold text-purple-400 mb-2 uppercase flex items-center gap-2">
-                                                                                                    <BookOpen className="w-3 h-3" /> Questions
-                                                                                                </h4>
-                                                                                                <ul className="space-y-1">
-                                                                                                    {getSuggestions(issue, level).meeting.questions.map((q: string, idx: number) => (
-                                                                                                        <li key={idx} className="text-[10px] text-gray-300 flex gap-2">
-                                                                                                            <span className="text-purple-500">?</span> {q}
-                                                                                                        </li>
-                                                                                                    ))}
-                                                                                                </ul>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
                                                                         </div>
                                                                     </div>
 
