@@ -36,6 +36,7 @@ export default function Home() {
     const [searchQuery, setSearchQuery] = useState("");
     const [filterType, setFilterType] = useState("all");
     const [filterDifficulty, setFilterDifficulty] = useState("all");
+    const [expandedIssueId, setExpandedIssueId] = useState<number | null>(null);
 
     // Derived State: Filtered Issues
     const filteredIssues = globalIssues.filter(issue => {
@@ -71,6 +72,49 @@ export default function Home() {
 
     const removeSkill = (skill: string) => {
         setUserSkills(userSkills.filter(s => s !== skill));
+    };
+
+    // Helper for Smart Suggestions (Rule-based Logic)
+    const getSuggestions = (issue: any) => {
+        const title = issue?.title?.toLowerCase() || "";
+        const level = "beginner"; // Global finder defaults to beginner labels
+
+        let base = {
+            branch: `git checkout -b fix/issue-${issue.number || 'patch'}`,
+            commit: `git commit -m "fix: ${issue.title} (#${issue.number || 'PR'})"`,
+            template: `## What does this PR do?\nFixes #${issue.number || 'issue-number'}\n\n## Verification\n- [ ] Ran locally\n- [ ] Tests pass`
+        };
+
+        let meeting = {
+            talkingPoints: [
+                "Summarize the goal of the PR in one sentence.",
+                "Mention any technical hurdles encountered and how they were solved.",
+                "Ask for feedback on specific lines of code (be precise)."
+            ],
+            questions: [
+                "Does this align with the project's long-term vision?",
+                "Are there existing tests I should run or update for this?",
+                "Are there specific edge cases I should focus on during verification?"
+            ]
+        };
+
+        let specific = {
+            files: "src/...",
+            skills: "General",
+            steps: ["Reproduce the issue", "Create a new branch", "Submit PR"],
+        };
+
+        if (title.includes('readme') || title.includes('docs')) {
+            specific = {
+                files: "README.md, CONTRIBUTING.md",
+                skills: "Markdown, Writing",
+                steps: ["Fork the repo", "Edit file locally", "Commit changes"]
+            };
+            base.branch = `git checkout -b docs/update-readme`;
+            base.commit = `git commit -m "docs: update README details"`;
+        }
+
+        return { ...base, ...specific, meeting, tip: "Don't forget to star the repo!" };
     };
 
     const fetchGlobalIssues = async () => {
@@ -120,11 +164,13 @@ export default function Home() {
                 const mappedIssues = data.items.map((item: any) => ({
                     id: item.id,
                     title: item.title,
+                    number: item.number,
                     labels: item.labels,
                     user: item.user,
                     html_url: item.html_url,
                     repo_name: item.repository_url.split('/').slice(-2).join('/'),
-                    url: item.html_url
+                    url: item.html_url,
+                    body: item.body
                 }));
                 setGlobalIssues(mappedIssues);
                 setShowSkillModal(false);
@@ -508,42 +554,130 @@ I am eager to contribute to ${repoName.split('/')[1] || repoName}. My skills in 
                                     </div>
                                 ) : (
                                     filteredIssues.map(issue => (
-                                        <div key={issue.id} className="bg-white/5 border border-white/5 rounded-xl p-5 hover:border-purple-500/30 transition-all group">
-                                            <div className="flex justify-between items-start gap-4">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <span className="text-[10px] font-mono text-gray-500">{issue.repo_name}</span>
-                                                        {getMatchScore(issue) > 0 && (
-                                                            <span className="text-[9px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">{getMatchScore(issue)}% MATCH</span>
-                                                        )}
-                                                        {issue.labels.map((l: any) => (
-                                                            <span key={l.name} className="flex items-center gap-1">
-                                                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: `#${l.color}` }}></span>
-                                                            </span>
-                                                        ))}
+                                        <div key={issue.id} className="bg-white/5 border border-white/5 rounded-xl overflow-hidden hover:border-purple-500/30 transition-all group">
+                                            <div
+                                                className="p-5 cursor-pointer"
+                                                onClick={() => setExpandedIssueId(expandedIssueId === issue.id ? null : issue.id)}
+                                            >
+                                                <div className="flex justify-between items-start gap-4">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <span className="text-[10px] font-mono text-gray-500">{issue.repo_name}</span>
+                                                            {getMatchScore(issue) > 0 && (
+                                                                <span className="text-[9px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">{getMatchScore(issue)}% MATCH</span>
+                                                            )}
+                                                            <div className="flex gap-1">
+                                                                {issue.labels.map((l: any) => (
+                                                                    <span key={l.name} title={l.name} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: `#${l.color}` }}></span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        <h3 className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors mb-2">
+                                                            {issue.title}
+                                                        </h3>
+                                                        <p className="text-xs text-gray-400 line-clamp-2">{issue.body || "No description provided."}</p>
                                                     </div>
-                                                    <h3 className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors mb-2">
-                                                        {issue.title}
-                                                    </h3>
-                                                    <p className="text-xs text-gray-400 line-clamp-2 mb-3">{issue.body || "No description provided."}</p>
-                                                </div>
-                                                <div className="flex flex-col items-end gap-2">
-                                                    <a
-                                                        href={issue.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="px-3 py-1.5 bg-purple-500/10 text-purple-300 border border-purple-500/20 rounded-lg text-xs font-bold hover:bg-purple-500 hover:text-white transition-all flex items-center gap-1.5"
-                                                    >
-                                                        View Issue <ExternalLink className="w-3 h-3" />
-                                                    </a>
-                                                    <button
-                                                        onClick={() => generateProposal(issue)}
-                                                        className="px-3 py-1.5 bg-blue-500/10 text-blue-300 border border-blue-500/20 rounded-lg text-xs font-bold hover:bg-blue-500 hover:text-white transition-all flex items-center gap-1.5"
-                                                    >
-                                                        <Sparkles className="w-3 h-3" /> Draft Application
-                                                    </button>
+                                                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                                                        <a
+                                                            href={issue.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="px-3 py-1.5 bg-purple-500/10 text-purple-300 border border-purple-500/20 rounded-lg text-[10px] font-bold hover:bg-purple-500 hover:text-white transition-all flex items-center gap-1.5"
+                                                        >
+                                                            View <ExternalLink className="w-3 h-3" />
+                                                        </a>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); generateProposal(issue); }}
+                                                            className="px-3 py-1.5 bg-blue-500/10 text-blue-300 border border-blue-500/20 rounded-lg text-[10px] font-bold hover:bg-blue-500 hover:text-white transition-all flex items-center gap-1.5"
+                                                        >
+                                                            Draft <Sparkles className="w-3 h-3" />
+                                                        </button>
+                                                        <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${expandedIssueId === issue.id ? 'rotate-180' : ''}`} />
+                                                    </div>
                                                 </div>
                                             </div>
+
+                                            <AnimatePresence>
+                                                {expandedIssueId === issue.id && (
+                                                    <motion.div
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: "auto", opacity: 1 }}
+                                                        exit={{ height: 0, opacity: 0 }}
+                                                        className="border-t border-white/5 bg-black/20"
+                                                    >
+                                                        <div className="p-5 space-y-6">
+                                                            <div className="flex items-center gap-3 bg-purple-500/10 border border-purple-500/20 px-4 py-2 rounded-xl w-fit">
+                                                                <Sparkles className="w-4 h-4 text-purple-400" />
+                                                                <span className="text-[10px] font-bold text-purple-300 uppercase tracking-widest">First PR Assistant Active</span>
+                                                            </div>
+
+                                                            <div className="grid gap-4">
+                                                                <div className="flex gap-4">
+                                                                    <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center text-[10px] font-bold flex-shrink-0">1</div>
+                                                                    <div className="flex-1">
+                                                                        <h4 className="text-xs font-bold text-white mb-1">Fork & Clone</h4>
+                                                                        <div className="bg-black/40 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-gray-400 flex items-center justify-between">
+                                                                            <span className="truncate mr-2">git clone [your-fork-url]</span>
+                                                                            <CopyButton text={`git clone [your-fork-url]`} />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="flex gap-4">
+                                                                    <div className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center text-[10px] font-bold flex-shrink-0">2</div>
+                                                                    <div className="flex-1">
+                                                                        <h4 className="text-xs font-bold text-white mb-1">Create Branch</h4>
+                                                                        <div className="bg-black/40 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-blue-300 flex items-center justify-between">
+                                                                            <span className="truncate mr-2">{getSuggestions(issue).branch}</span>
+                                                                            <CopyButton text={getSuggestions(issue).branch} />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="flex gap-4">
+                                                                    <div className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 flex items-center justify-center text-[10px] font-bold flex-shrink-0">3</div>
+                                                                    <div className="flex-1">
+                                                                        <h4 className="text-xs font-bold text-white mb-1">Apply Fix & Commit</h4>
+                                                                        <p className="text-[10px] text-gray-500 mb-2">Target: <span className="text-gray-300 italic">{getSuggestions(issue).files}</span></p>
+                                                                        <div className="bg-black/40 p-2 rounded-lg border border-white/5 font-mono text-[10px] text-green-300 flex items-center justify-between">
+                                                                            <span className="truncate mr-2">{getSuggestions(issue).commit}</span>
+                                                                            <CopyButton text={getSuggestions(issue).commit} />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="pt-4 border-t border-white/5 grid md:grid-cols-2 gap-4">
+                                                                    <div>
+                                                                        <h4 className="text-[10px] font-bold text-blue-400 mb-2 uppercase flex items-center gap-2">
+                                                                            <MessageSquare className="w-3 h-3" /> Talking Points
+                                                                        </h4>
+                                                                        <ul className="space-y-1">
+                                                                            {getSuggestions(issue).meeting.talkingPoints.map((point: string, idx: number) => (
+                                                                                <li key={idx} className="text-[10px] text-gray-400 flex gap-2">
+                                                                                    <span className="text-blue-500/50">•</span> {point}
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    </div>
+                                                                    <div>
+                                                                        <h4 className="text-[10px] font-bold text-purple-400 mb-2 uppercase flex items-center gap-2">
+                                                                            <BookOpen className="w-3 h-3" /> Questions
+                                                                        </h4>
+                                                                        <ul className="space-y-1">
+                                                                            {getSuggestions(issue).meeting.questions.map((q: string, idx: number) => (
+                                                                                <li key={idx} className="text-[10px] text-gray-400 flex gap-2">
+                                                                                    <span className="text-purple-500/50">?</span> {q}
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                         </div>
                                     ))
                                 )}
