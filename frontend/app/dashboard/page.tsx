@@ -257,22 +257,12 @@ export default function Dashboard() {
                 };
                 base.branch = `git checkout -b docs/update-readme`;
                 base.commit = `git commit -m "docs: update README details"`;
-                meeting.talkingPoints = [
-                    "Discussed clarity of current documentation.",
-                    "Proposed additions for better contributor onboarding.",
-                    "Verified formatting across different platforms."
-                ];
             } else {
                 specific = {
                     files: "src/components/...",
                     skills: "React, CSS",
                     steps: ["Reproduce expected behavior", "Locate component file", "Apply fix"]
                 };
-                meeting.talkingPoints = [
-                    "Explain the UI state changes implemented.",
-                    "Show how the component handles different screen sizes.",
-                    "Discuss any new dependencies added (if any)."
-                ];
             }
         }
 
