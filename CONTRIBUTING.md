@@ -1,39 +1,55 @@
 # Contributing to OnboardHub
 
-First off, thanks for taking the time to contribute! 🎉
+Welcome! We love contributions from the community. Here’s how you can help.
 
-OnboardHub is built to help beginners, so we strive to make our own contribution process as beginner-friendly as possible.
+## 🛠 Tech Stack
+- **Framework**: Next.js 14
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **State**: React Context / Hooks
 
-## 🛠️ Local Development Setup
+## 🚀 Getting Started
 
-1.  **Fork the repository** on GitHub.
-2.  **Clone your fork**:
-    ```bash
-    git clone https://github.com/YOUR_USERNAME/OnboardHub.git
-    cd OnboardHub
-    ```
-3.  **Install Dependencies & Start**:
-    We have a unified script for this!
-    ```bash
-    .\start_app.bat
-    ```
-    This will install dependencies for both Frontend and Backend and start them on `localhost:3000` and `localhost:5000`.
+1. **Fork and Clone**
+   ```bash
+   git clone https://github.com/your-username/OnboardHub.git
+   cd OnboardHub
+   ```
 
-## 💻 Project Structure
+2. **Setup Environment**
+   ```bash
+   nvm install --lts && nvm use --lts
+   npm install
+   ```
 
-- **`frontend/`**: Next.js 14 Application (UI)
-- **`backend/`**: Express.js Server (GitHub API Logic)
+3. **Run Locally**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000).
 
-## 🔀 Workflow
+## 📝 Workflow
 
-1.  Find an issue you want to work on.
-2.  Create a new branch: `git checkout -b fix/amazing-feature`
-3.  Commit your changes: `git commit -m 'Add some amazing feature'`
-4.  Push to the branch: `git push origin fix/amazing-feature`
-5.  Open a Pull Request!
+1. **Create a Branch**
+   Use `kebab-case` with the issue number:
+   ```bash
+   git checkout -b fix/issue-123-description
+   ```
 
-## 🤝 Code of Conduct
+2. **Commit Conventions**
+   We follow [Conventional Commits](https://www.conventionalcommits.org/):
+   - `fix: ...` for bugs
+   - `feat: ...` for new features
+   - `docs: ...` for documentation
 
-Please be respectful to everyone in the community. We are here to learn and grow together.
+3. **Verify**
+   Before pushing, run:
+   ```bash
+   npm run lint
+   npm run build
+   ```
 
-Happy Coding! 🚀
+## 📬 Pull Request
+- Use the provided PR template.
+- Link the issue you fixed.
+- Attach screenshots for UI changes.

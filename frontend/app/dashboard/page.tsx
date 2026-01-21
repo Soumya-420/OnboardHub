@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
     ArrowLeft, Github, Terminal, BookOpen, AlertCircle,
     Loader2, Star, GitFork, Disc, Layers, ShieldCheck, Users, Sparkles,
-    MessageSquare, Info, ExternalLink, ChevronDown, X, Zap, Search, Rocket
+    MessageSquare, Info, ExternalLink, ChevronDown, X, Zap, Search, Rocket, Copy
 } from "lucide-react";
+import { getPrSuggestions } from "../../utils/prAssistant";
 import { BeginnerReadinessCard } from '../../components/BeginnerReadinessCard';
 import { MagnifiedHeading } from '../../components/MagnifiedHeading';
 import { CopyButton } from "../../components/CopyButton";
@@ -35,6 +36,10 @@ export default function Dashboard() {
 
     const [showMatchesOnly, setShowMatchesOnly] = useState(false);
     const [isDemoMode, setIsDemoMode] = useState(false);
+    // PR Assistant State
+    const [expandedIssueId, setExpandedIssueId] = useState<number | null>(null);
+    const [activeComments, setActiveComments] = useState<any[]>([]);
+    const [loadingComments, setLoadingComments] = useState(false);
 
     // Auto-run for Demo Mode or Direct Link
     useEffect(() => {
@@ -230,53 +235,19 @@ export default function Dashboard() {
     const techStackData = data ? data.techStack.map((tech: string) => ({ name: tech, value: 1 })) : [];
 
     // Helper for Smart Suggestions (Rule-based Logic)
-    const getSuggestions = (issue: any, level: string) => {
-        const title = issue?.title?.toLowerCase() || "";
-
-        // Base structure for PR Assistant
-        let base = {
-            branch: `git checkout -b fix/issue-${issue.number}`,
-            commit: `git commit -m "fix: ${issue.title} (#${issue.number})"`,
-            template: `## What does this PR do?\nFixes #${issue.number}\n\n## Verification\n- [ ] Ran locally\n- [ ] Tests pass`
-        };
-
-
-        // Context-aware logic
-        let specific = {
-            files: "src/...",
-            skills: "General",
-            steps: ["Reproduce the issue", "Create a new branch", "Submit PR"],
-        };
-
-        if (level === 'beginner') {
-            if (title.includes('readme') || title.includes('docs')) {
-                specific = {
-                    files: "README.md, CONTRIBUTING.md",
-                    skills: "Markdown, Writing",
-                    steps: ["Fork the repo", "Edit file in GitHub or locally", "Commit changes"]
-                };
-                base.branch = `git checkout -b docs/update-readme`;
-                base.commit = `git commit -m "docs: update README details"`;
-            } else {
-                specific = {
-                    files: "src/components/...",
-                    skills: "React, CSS",
-                    steps: ["Reproduce expected behavior", "Locate component file", "Apply fix"]
-                };
-            }
-        }
-
-        return { ...base, ...specific, tip: "Don't forget to star the repo!" };
-    };
+    // Helper for Smart Suggestions (Rule-based Logic)
+    // REPLACED by shared utility
+    // const getSuggestions = ...
 
     // Skills Matching Logic
     const getMatchScore = (issue: any) => {
         if (!issue || !userSkills.length) return 0;
         try {
-            const suggestions = getSuggestions(issue, level);
+            const suggestions = getPrSuggestions(issue, data?.repo || undefined);
             const title = issue.title || "";
             const body = issue.body || "";
-            const issueContext = (title + " " + body + " " + suggestions.skills).toLowerCase();
+            // Use 'guidance' or similar text for context if needed, or remove skill check if not in utility
+            const issueContext = (title + " " + body).toLowerCase();
             const matches = userSkills.filter(skill => issueContext.includes(skill.toLowerCase()));
             return Math.min(Math.round((matches.length / userSkills.length) * 100), 100);
         } catch (e) {
@@ -286,7 +257,7 @@ export default function Dashboard() {
 
 
     const generateProposal = (issue: any) => {
-        const suggestions = getSuggestions(issue, level);
+        const suggestions = getPrSuggestions(issue, data?.repo || undefined, data?.packageManager || 'npm');
         const repoName = issue.repo_name || data?.repo || "Unknown Repo";
         const primaryLang = data?.primaryLanguage || "Open Source";
 
@@ -298,16 +269,16 @@ export default function Dashboard() {
 
 ## 2. Technical Approach
 I plan to address this issue by focusing on the following areas:
-- **Scope:** ${suggestions.files}
-- **Required Skills:** ${suggestions.skills}
+- **Scope:** ${suggestions.prDetails.branchName}
+- **Required Skills:** ${data?.techStack?.join(', ') || 'React, TypeScript, Git'}
 
 ### Proposed Steps:
-${suggestions.steps.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}
+${suggestions.workflow.steps.map((s: any, i: number) => `${i + 1}. ${s.label}: ${s.desc}`).join('\n')}
 
 ## 3. Timeline
-- **Phase 1 (Setup):** Reproduce issue and analyze existing codebase.
-- **Phase 2 (Implementation):** Apply fixes in a dedicated branch.
-- **Phase 3 (Verification):** Manual and automated testing.
+- **Phase 1 (Setup):** ${suggestions.setup.steps[0].desc}
+- **Phase 2 (Implementation):** Apply fixes in a dedicated branch (${suggestions.prDetails.branchName}).
+- **Phase 3 (Verification):** ${suggestions.guidance.troubleshooting[2].solution}
 
 ## 4. Why me?
 I am passionate about ${primaryLang} and eager to contribute to ${repoName.split('/')[1] || repoName}. ${data ? `I've analyzed the repo's health score (${data.healthScore}/100) and feel confident in my ability to follow the project's standards.` : "I have reviewed the repository details and am ready to start contributing immediately."}
@@ -323,10 +294,7 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
         setShowProposal(true);
     };
 
-    // State for expanded suggestion
-    const [expandedIssue, setExpandedIssue] = useState<number | null>(null);
-    const [activeComments, setActiveComments] = useState<any[]>([]);
-    const [loadingComments, setLoadingComments] = useState(false);
+
 
     const fetchComments = async (issue: any) => {
         if (!data || !issue || issue.comments === 0) {
@@ -351,10 +319,10 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
         }
     };
 
-    const toggleSuggestion = (e: React.MouseEvent, issue: any) => {
+    const toggleSuggestion = (e: any, issue: any) => {
         e.preventDefault();
-        const isExpanding = expandedIssue !== issue.id;
-        setExpandedIssue(isExpanding ? issue.id : null);
+        const isExpanding = expandedIssueId !== issue.id;
+        setExpandedIssueId(isExpanding ? issue.id : null);
 
         if (isExpanding) {
             fetchComments(issue);
@@ -713,7 +681,7 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
                                             {issues.filter(i => !showMatchesOnly || getMatchScore(i) > 30).map((issue) => (
                                                 <div
                                                     key={issue.id}
-                                                    className={`group rounded-2xl border transition-all duration-300 overflow-hidden ${expandedIssue === issue.id
+                                                    className={`group rounded-2xl border transition-all duration-300 overflow-hidden ${expandedIssueId === issue.id
                                                         ? 'bg-white/5 border-purple-500/30'
                                                         : 'bg-white/2 border-white/5 hover:border-white/10 hover:bg-white/3'
                                                         }`}
@@ -766,14 +734,14 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
                                                                         <MessageSquare className="w-3 h-3" />
                                                                         <span className="text-[10px]">{issue.comments}</span>
                                                                     </div>
-                                                                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedIssue === issue.id ? 'rotate-180' : ''}`} />
+                                                                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${expandedIssueId === issue.id ? 'rotate-180' : ''}`} />
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                     <AnimatePresence>
-                                                        {expandedIssue === issue.id && (
+                                                        {expandedIssueId === issue.id && (
                                                             <motion.div
                                                                 initial={{ height: 0, opacity: 0 }}
                                                                 animate={{ height: "auto", opacity: 1 }}
@@ -817,143 +785,187 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
                                                                             <Zap className="w-4 h-4" /> Draft Application
                                                                         </button>
 
+                                                                        {/* First PR Assistant UI */}
+                                                                        {(() => {
+                                                                            const suggestions = getPrSuggestions(issue, data?.repo || undefined, data?.packageManager || 'npm');
+                                                                            return (
+                                                                                <div className="bg-gradient-to-br from-gray-900 to-black rounded-xl border border-purple-500/20 p-5 space-y-6 mt-4 relative overflow-hidden group">
+                                                                                    <div className="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
-                                                                        {/* Roadmap Steps */}
-                                                                        <div className="space-y-6">
-                                                                            <div className="flex gap-4">
-                                                                                <div className="flex flex-col items-center">
-                                                                                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-blue-500/20">1</div>
-                                                                                    <div className="w-px h-full bg-gray-800 my-2"></div>
-                                                                                </div>
-                                                                                <div className="flex-1 pb-4">
-                                                                                    <h4 className="text-sm font-bold text-white mb-2">Fork & Setup</h4>
-                                                                                    <p className="text-xs text-gray-500 mb-3">Fork the repository on GitHub, then clone and install dependencies.</p>
-                                                                                    <div className="bg-black p-3 rounded-lg border border-white/5 font-mono text-xs text-gray-400 flex items-center justify-between">
-                                                                                        <span>git clone [your-fork-url] && {data.packageManager} install</span>
-                                                                                        <CopyButton text={`git clone [your-fork-url] && ${data.packageManager} install`} />
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            <div className="flex gap-4">
-                                                                                <div className="flex flex-col items-center">
-                                                                                    <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-purple-500/20">2</div>
-                                                                                    <div className="w-px h-full bg-gray-800 my-2"></div>
-                                                                                </div>
-                                                                                <div className="flex-1 pb-4">
-                                                                                    <h4 className="text-sm font-bold text-white mb-2">Create Branch</h4>
-                                                                                    <div className="bg-black/50 rounded-lg p-3 flex items-center justify-between border border-white/5">
-                                                                                        <code className="text-xs text-blue-300 font-mono truncate mr-2">
-                                                                                            {getSuggestions(issue, level).branch}
-                                                                                        </code>
-                                                                                        <CopyButton text={getSuggestions(issue, level).branch || ""} />
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            <div className="flex gap-4">
-                                                                                <div className="flex flex-col items-center">
-                                                                                    <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-green-500/20">3</div>
-                                                                                    <div className="w-px h-full bg-gray-800 my-2"></div>
-                                                                                </div>
-                                                                                <div className="flex-1 pb-4">
-                                                                                    <h4 className="text-sm font-bold text-white mb-2">Apply Fix & Commit</h4>
-                                                                                    <p className="text-xs text-gray-500 mb-3">Target files: <span className="text-gray-300 font-mono italic">{getSuggestions(issue, level).files}</span></p>
-                                                                                    <div className="bg-black/50 rounded-lg p-3 flex items-center justify-between border border-white/5">
-                                                                                        <code className="text-xs text-green-300 font-mono truncate mr-2">
-                                                                                            {getSuggestions(issue, level).commit}
-                                                                                        </code>
-                                                                                        <CopyButton text={getSuggestions(issue, level).commit || ""} />
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            <div className="flex gap-4">
-                                                                                <div className="flex flex-col items-center">
-                                                                                    <div className="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-yellow-500/20">4</div>
-                                                                                    <div className="w-px h-full bg-gray-800 my-2"></div>
-                                                                                </div>
-                                                                                <div className="flex-1 pb-4">
-                                                                                    <h4 className="text-sm font-bold text-white mb-2">PR Submission</h4>
-                                                                                    <span className="text-xs uppercase tracking-wider text-gray-500 font-bold flex items-center gap-2 mb-2">Suggested Template:</span>
-                                                                                    <div className="bg-black/50 rounded-lg p-3 border border-white/5 relative group/template">
-                                                                                        <pre className="text-[10px] text-gray-400 font-mono overflow-x-auto whitespace-pre-wrap">
-                                                                                            {getSuggestions(issue, level).template}
-                                                                                        </pre>
-                                                                                        <div className="absolute top-2 right-2 opacity-0 group-hover/template:opacity-100 transition-opacity">
-                                                                                            <CopyButton text={getSuggestions(issue, level).template || ""} />
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* Community Discussion Section - REAL DATA */}
-                                                                    {issue.comments > 0 && (
-                                                                        <div className="pt-6 border-t border-gray-800">
-                                                                            <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                                                                                <MessageSquare className="w-4 h-4 text-blue-400" />
-                                                                                Community Discussion ({issue.comments})
-                                                                            </h4>
-
-                                                                            {loadingComments ? (
-                                                                                <div className="flex items-center gap-2 text-xs text-gray-500 py-4">
-                                                                                    <Loader2 className="w-4 h-4 animate-spin" /> Loading discussion...
-                                                                                </div>
-                                                                            ) : (
-                                                                                <div className="space-y-3">
-                                                                                    {activeComments.slice(0, 3).map((comment) => (
-                                                                                        <div key={comment.id} className="bg-white/5 rounded-xl p-4 border border-white/5 flex gap-3">
-                                                                                            <div className="flex-shrink-0">
-                                                                                                <img
-                                                                                                    src={comment.user.avatar_url || "https://github.com/ghost.png"}
-                                                                                                    alt={comment.user.login}
-                                                                                                    className="w-8 h-8 rounded-full border border-gray-700"
-                                                                                                />
-                                                                                            </div>
-                                                                                            <div className="flex-1 min-w-0">
-                                                                                                <div className="flex items-center justify-between mb-1">
-                                                                                                    <span className="text-xs font-bold text-gray-200">{comment.user.login}</span>
-                                                                                                    <span className="text-[10px] text-gray-500">{new Date(comment.created_at).toLocaleDateString()}</span>
+                                                                                    {/* 1. Environment Setup */}
+                                                                                    <div className="space-y-3 relative">
+                                                                                        <h4 className="flex items-center gap-2 text-xs font-bold text-purple-300 uppercase tracking-widest">
+                                                                                            <div className="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center text-[10px] border border-purple-500/30">1</div>
+                                                                                            Environment Setup
+                                                                                        </h4>
+                                                                                        <div className="bg-black/40 rounded-lg border border-white/10 p-3 font-mono text-[10px] text-gray-400 group/code">
+                                                                                            <div className="flex justify-between items-start">
+                                                                                                <div className="space-y-1.5">
+                                                                                                    {suggestions.setup.steps.map((step: any, i: number) => (
+                                                                                                        <div key={i} className="flex gap-2">
+                                                                                                            <span className="text-purple-500 select-none">$</span>
+                                                                                                            <span className="text-gray-300">{step.cmd}</span>
+                                                                                                        </div>
+                                                                                                    ))}
                                                                                                 </div>
-                                                                                                <p className="text-xs text-gray-400 leading-relaxed truncate">
-                                                                                                    {comment.body}
-                                                                                                </p>
+                                                                                                <button
+                                                                                                    onClick={(e) => { e.stopPropagation(); handleCopy(suggestions.setup.steps.map((s: any) => s.cmd).join('\n')); }}
+                                                                                                    className="opacity-0 group-hover/code:opacity-100 transition-opacity p-1.5 hover:bg-white/10 rounded-md"
+                                                                                                >
+                                                                                                    {copied ? <span className="text-green-400 text-[10px]">Copied</span> : <Copy className="w-3 h-3 text-gray-500" />}
+                                                                                                </button>
                                                                                             </div>
-                                                                                            <a href={comment.html_url} target="_blank" rel="noopener noreferrer" className="self-start text-gray-500 hover:text-white">
-                                                                                                <ExternalLink className="w-3 h-3" />
-                                                                                            </a>
                                                                                         </div>
-                                                                                    ))}
-                                                                                    {issue.comments > 3 && (
-                                                                                        <button onClick={() => window.open(issue.html_url, '_blank')} className="w-full py-2 text-xs text-center text-blue-400 hover:text-blue-300 font-medium bg-blue-500/5 rounded-lg border border-blue-500/10">
-                                                                                            View {issue.comments - 3} more comments on GitHub
-                                                                                        </button>
-                                                                                    )}
-                                                                                    {activeComments.length === 0 && !loadingComments && (
-                                                                                        <p className="text-xs text-gray-500 italic">No comments to display.</p>
-                                                                                    )}
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    )}
+                                                                                    </div>
 
-                                                                    <div className="flex flex-wrap gap-4 pt-4 border-t border-gray-800">
-                                                                        <a
-                                                                            href={issue.html_url}
-                                                                            target="_blank"
-                                                                            className="flex items-center gap-2 px-6 py-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 transition-colors text-sm font-semibold"
-                                                                        >
-                                                                            <ExternalLink className="w-4 h-4" /> View on GitHub
-                                                                        </a>
-                                                                        <button
-                                                                            onClick={() => generateProposal(issue)}
-                                                                            className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all text-sm font-bold shadow-[0_0_15px_rgba(147,51,234,0.3)]"
-                                                                        >
-                                                                            <Zap className="w-4 h-4" /> Draft Application
-                                                                        </button>
+                                                                                    {/* 2. Development Workflow */}
+                                                                                    <div className="space-y-3 relative">
+                                                                                        <h4 className="flex items-center gap-2 text-xs font-bold text-blue-300 uppercase tracking-widest">
+                                                                                            <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-[10px] border border-blue-500/30">2</div>
+                                                                                            Dev Workflow
+                                                                                        </h4>
+                                                                                        <div className="grid gap-2">
+                                                                                            {suggestions.workflow.steps.map((step: any, i: number) => (
+                                                                                                <div key={i} className="flex items-center gap-3 bg-white/5 p-2.5 rounded-lg border border-white/5">
+                                                                                                    <GitFork className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                                                                                                    <div className="flex-1 min-w-0">
+                                                                                                        <div className="text-[11px] font-medium text-gray-200">{step.label}</div>
+                                                                                                        <div className="text-[10px] text-gray-500 truncate">{step.desc}</div>
+                                                                                                    </div>
+                                                                                                    <div className="px-2 py-1 bg-black/40 rounded border border-white/10 font-mono text-[9px] text-gray-400">
+                                                                                                        {step.cmd || "git commit"}
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            ))}
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                </div>
+                                                                            );
+                                                                        })()}
+
+                                                                        {/* Enhanced Helper Info & Troubleshooting */}
+                                                                        {(() => {
+                                                                            const suggestions = getPrSuggestions(issue, data?.repo || undefined, data?.packageManager || 'npm');
+                                                                            return (
+                                                                                <div className="space-y-4">
+                                                                                    {/* 3. Helper Info Grid */}
+                                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                                        <div className="bg-amber-500/5 rounded-lg p-3 border border-amber-500/10">
+                                                                                            <h5 className="text-[10px] font-bold text-amber-400 mb-2 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Troubleshooting</h5>
+                                                                                            <div className="space-y-2">
+                                                                                                {suggestions.guidance.troubleshooting.map((t: any, i: number) => (
+                                                                                                    <div key={i} className="flex justify-between items-center text-[10px]">
+                                                                                                        <span className="text-gray-400">{t.problem}</span>
+                                                                                                        <code className="bg-black/40 px-1 py-0.5 rounded text-gray-300 font-mono">{t.solution}</code>
+                                                                                                    </div>
+                                                                                                ))}
+
+
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div className="bg-emerald-500/5 rounded-lg p-3 border border-emerald-500/10">
+                                                                                            <h5 className="text-[10px] font-bold text-emerald-400 mb-2 flex items-center gap-1"><GitFork className="w-3 h-3" /> PR Details</h5>
+                                                                                            <div className="space-y-2">
+                                                                                                <div className="flex flex-col gap-1">
+                                                                                                    <span className="text-[10px] text-gray-500">Branch Name</span>
+                                                                                                    <div className="flex items-center gap-2">
+                                                                                                        <code className="text-[10px] bg-black/40 px-1.5 py-0.5 rounded text-emerald-300/80 truncate flex-1 block">
+                                                                                                            {suggestions.prDetails.branchName}
+                                                                                                        </code>
+                                                                                                        <button onClick={(e) => { e.stopPropagation(); handleCopy(suggestions.prDetails.branchName) }} className="text-emerald-500 hover:text-emerald-400">
+                                                                                                            <Copy className="w-3 h-3" />
+                                                                                                        </button>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <div className="flex flex-col gap-1">
+                                                                                                    <span className="text-[10px] text-gray-500">PR Template</span>
+                                                                                                    <button
+                                                                                                        onClick={(e) => { e.stopPropagation(); handleCopy(suggestions.prDetails.prTemplate) }}
+                                                                                                        className="text-[10px] flex items-center gap-1 text-blue-400 hover:text-blue-300 bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20 w-fit"
+                                                                                                    >
+                                                                                                        <Copy className="w-3 h-3" /> Copy Markdown
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    {/* Start "Why this works" Section */}
+                                                                                    <div className="bg-blue-500/5 rounded-lg p-3 border border-blue-500/10 text-[10px] text-blue-200/70">
+                                                                                        <strong className="text-blue-400">Why this works:</strong> {suggestions.guidance.whyItMatters}
+                                                                                    </div>
+                                                                                    <div className="text-center">
+                                                                                        <a href="https://github.com/features/issues" target="_blank" className="text-[10px] text-gray-500 hover:text-white underline">See how GitHub Issues work (Demo)</a>
+                                                                                    </div>
+                                                                                    {/* End "Why this works" Section */}
+                                                                                </div>
+                                                                            );
+                                                                        })()}
+
+                                                                        {/* Community Discussion */}
+                                                                        <div className="pt-6 border-t border-gray-700/50">
+                                                                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                                                <MessageSquare className="w-3 h-3" /> Community Discussion
+                                                                            </h3>
+                                                                            <div className="space-y-4">
+                                                                                {loadingComments && (
+                                                                                    <div className="flex justify-center py-4">
+                                                                                        <Loader2 className="w-5 h-5 animate-spin text-purple-500" />
+                                                                                    </div>
+                                                                                )}
+
+                                                                                {activeComments.map((comment) => (
+                                                                                    <div key={comment.id} className="flex gap-3 bg-black/20 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-colors">
+                                                                                        <div className="flex-shrink-0">
+                                                                                            <img
+                                                                                                src={comment.user.avatar_url || "https://github.com/ghost.png"}
+                                                                                                alt={comment.user.login}
+                                                                                                className="w-8 h-8 rounded-full border border-gray-700"
+                                                                                            />
+                                                                                        </div>
+                                                                                        <div className="flex-1 min-w-0">
+                                                                                            <div className="flex items-center justify-between mb-1">
+                                                                                                <span className="text-xs font-bold text-gray-200">{comment.user.login}</span>
+                                                                                                <span className="text-[10px] text-gray-500">{new Date(comment.created_at).toLocaleDateString()}</span>
+                                                                                            </div>
+                                                                                            <p className="text-xs text-gray-400 leading-relaxed break-words whitespace-pre-wrap">
+                                                                                                {comment.body}
+                                                                                            </p>
+                                                                                        </div>
+                                                                                        <a href={comment.html_url} target="_blank" rel="noopener noreferrer" className="self-start text-gray-500 hover:text-white">
+                                                                                            <ExternalLink className="w-3 h-3" />
+                                                                                        </a>
+                                                                                    </div>
+                                                                                ))}
+
+                                                                                {issue.comments > 3 && (
+                                                                                    <button onClick={() => window.open(issue.html_url, '_blank')} className="w-full py-2 text-xs text-center text-blue-400 hover:text-blue-300 font-medium bg-blue-500/5 rounded-lg border border-blue-500/10">
+                                                                                        View {issue.comments - 3} more comments on GitHub
+                                                                                    </button>
+                                                                                )}
+
+                                                                                {activeComments.length === 0 && !loadingComments && (
+                                                                                    <p className="text-xs text-gray-500 italic text-center py-2">No comments to display.</p>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="flex flex-wrap gap-4 pt-4 border-t border-gray-800">
+                                                                            <a
+                                                                                href={issue.html_url}
+                                                                                target="_blank"
+                                                                                className="flex items-center gap-2 px-6 py-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 transition-colors text-sm font-semibold"
+                                                                            >
+                                                                                <ExternalLink className="w-4 h-4" /> View on GitHub
+                                                                            </a>
+                                                                            <button
+                                                                                onClick={() => generateProposal(issue)}
+                                                                                className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all text-sm font-bold shadow-[0_0_15px_rgba(147,51,234,0.3)]"
+                                                                            >
+                                                                                <Zap className="w-4 h-4" /> Draft Application
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </motion.div>
@@ -969,40 +981,43 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
                     )}
                 </AnimatePresence>
 
-                {/* Modern Empty State */}
-                {!data && !loading && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="mt-20 flex flex-col items-center justify-center text-center"
-                    >
-                        <div className="relative w-64 h-64 mb-8 flex items-center justify-center">
-                            <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-                            <img src="/grid.svg" className="absolute inset-0 w-full h-full opacity-30 animate-spin-slow mix-blend-overlay" alt="" />
-                            <div className="relative z-10 bg-black/50 p-6 rounded-2xl border border-white/10 backdrop-blur-sm shadow-2xl">
-                                <GitFork className="w-16 h-16 text-gray-200" />
-                            </div>
-                        </div>
-                        <h2 className="text-3xl font-bold text-white mb-3">Ready to contribute?</h2>
-                        <p className="text-gray-400 max-w-md mb-8 text-lg">
-                            Enter a GitHub URL above to analyze complexity, find beginner issues, and generate a setup guide.
-                        </p>
 
-                        <div className="flex gap-4">
-                            <button
-                                onClick={() => {
-                                    setRepoUrl("https://github.com/facebook/react");
-                                    analyzeRepo("https://github.com/facebook/react");
-                                }}
-                                className="px-6 py-3 rounded-xl bg-gray-900 border border-gray-800 text-gray-300 hover:text-white hover:bg-gray-800 transition-all flex items-center gap-2"
-                            >
-                                <Github className="w-4 h-4" /> Try with React
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
-            </main>
+                {/* Modern Empty State */}
+                {
+                    !data && !loading && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="mt-20 flex flex-col items-center justify-center text-center"
+                        >
+                            <div className="relative w-64 h-64 mb-8 flex items-center justify-center">
+                                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+                                <img src="/grid.svg" className="absolute inset-0 w-full h-full opacity-30 animate-spin-slow mix-blend-overlay" alt="" />
+                                <div className="relative z-10 bg-black/50 p-6 rounded-2xl border border-white/10 backdrop-blur-sm shadow-2xl">
+                                    <GitFork className="w-16 h-16 text-gray-200" />
+                                </div>
+                            </div>
+                            <h2 className="text-3xl font-bold text-white mb-3">Ready to contribute?</h2>
+                            <p className="text-gray-400 max-w-md mb-8 text-lg">
+                                Enter a GitHub URL above to analyze complexity, find beginner issues, and generate a setup guide.
+                            </p>
+
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => {
+                                        setRepoUrl("https://github.com/facebook/react");
+                                        analyzeRepo("https://github.com/facebook/react");
+                                    }}
+                                    className="px-6 py-3 rounded-xl bg-gray-900 border border-gray-800 text-gray-300 hover:text-white hover:bg-gray-800 transition-all flex items-center gap-2"
+                                >
+                                    <Github className="w-4 h-4" /> Try with React
+                                </button>
+                            </div>
+                        </motion.div>
+                    )
+                }
+            </main >
 
             {/* Proposal Modal (Hackathon Winner Feature) */}
             {
