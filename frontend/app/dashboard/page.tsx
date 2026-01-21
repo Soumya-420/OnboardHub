@@ -407,10 +407,10 @@ I am passionate about ${primaryLang} and eager to contribute to ${repoName.split
 
         try {
             // SYNCED WITH LANDING PAGE: High-yield beginner search
-            const baseQuery = ['is:issue', 'is:open'];
+            const baseQuery = ['is:issue', 'is:open', 'archived:false'];
 
-            const labels = ['"good first issue"', 'beginner', '"help wanted"'];
-            baseQuery.push(`label:${labels.join(' OR label:')}`);
+            const labels = ['"good first issue"', 'beginner', '"help wanted"', 'up-for-grabs'];
+            baseQuery.push(`(${labels.map(l => `label:${l}`).join(' OR ')})`);
 
             if (userSkills.length > 0) {
                 const skillQuery = userSkills.map(s => {

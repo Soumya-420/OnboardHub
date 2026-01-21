@@ -78,17 +78,16 @@ export default function Home() {
         setGlobalLoading(true);
         try {
             // SIMPLIFIED QUERY: Target high-yield beginner issues
-            const baseQuery = ['is:issue', 'is:open'];
+            const baseQuery = ['is:issue', 'is:open', 'archived:false'];
 
-            // 1. Beginner Labels Group
-            const labels = ['"good first issue"', 'beginner', '"help wanted"'];
-            baseQuery.push(`label:${labels.join(' OR label:')}`);
+            // 1. Beginner Labels Group (Parenthesized for correct OR logic)
+            const labels = ['"good first issue"', 'beginner', '"help wanted"', 'up-for-grabs'];
+            baseQuery.push(`(${labels.map(l => `label:${l}`).join(' OR ')})`);
 
-            // 2. Skill/Language Filter (use language: if it's a known language, otherwise just text search)
+            // 2. Skill/Language Filter
             if (userSkills.length > 0) {
                 const skillQuery = userSkills.map(s => {
                     const lang = s.toLowerCase();
-                    // Basic list of common languages to help GitHub filter
                     const commonLangs = ['javascript', 'typescript', 'python', 'java', 'cpp', 'css', 'html', 'go', 'rust'];
                     return commonLangs.includes(lang) ? `language:${lang}` : `"${s}"`;
                 }).join(' OR ');
@@ -214,7 +213,7 @@ I am eager to contribute to ${repoName.split('/')[1] || repoName}. My skills in 
 
             {/* Dynamic Background */}
             {/* Dynamic Background */}
-            <div className={`absolute inset-0 bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-20 pointer-events-none`} style={{ backgroundImage: `url('${process.env.NODE_ENV === 'production' ? '/OnboardHub' : ''}/grid.svg')` }}></div>
+            <div className="absolute inset-0 bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-20 pointer-events-none" style={{ backgroundImage: "url('/grid.svg')" }}></div>
 
             <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-blue-600/20 blur-[150px] rounded-full pointer-events-none mix-blend-screen opacity-50"></div>
             <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-purple-600/20 blur-[150px] rounded-full pointer-events-none mix-blend-screen opacity-50"></div>
