@@ -7,12 +7,15 @@
 <div align="center">
 
 # OnboardHub 🚀
-
+<p>
+  <em>
 > **Built for Winter Of Code 5.0**  
 > *"Stop Staring at CONTRIBUTING.md. Start Coding."*
 
 **OnboardHub** is a data-driven bridge for open-source beginners. It eliminates "Analysis Paralysis" by parsing complex repositories and providing a personalized, step-by-step roadmap to your first Pull Request.
-
+ </em>
+</p>
+</div>
 ---
 
 ## 🌟 The Problem
