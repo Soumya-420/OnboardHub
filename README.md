@@ -1,121 +1,214 @@
 <div id="top"></div>
 
-## 👇🏻 Click the below image to watch the OnBoardHub Demo video 
+## 👇🏻 Click the image below to watch the OnboardHub Demo video
 
-
-[![Watch the OnboardHub Demo video](<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/efcb96da-0189-42e5-893f-9aeaea9799da" />
-)](https://youtu.be/Q6q_tNk5r50?si=CajtFIU0cP6dx-6)
+[![Watch the OnboardHub Demo video](ImgOnboardHub.jpeg)](https://youtu.be/Q6q_tNk5r50?si=CajtFIU0cP6dx-6_)
 
 <div align="center">
 
-# OnboardHub 🚀
+# 🚀 OnboardHub
+
 <p>
   <em>
-> **Built for Winter Of Code 5.0**  <br>
-> *"Stop Staring at CONTRIBUTING.md. Start Coding."*
-
-**OnboardHub** is a data-driven bridge for open-source beginners. It eliminates "Analysis Paralysis" by parsing complex repositories and providing a personalized, step-by-step roadmap to your first Pull Request.
- </em>
+    A guided contribution platform that turns confusing GitHub repositories into step-by-step contribution journeys.
+  </em>
 </p>
+
+<p>
+  <em>
+    🧩 Built to help beginners go from confused to first open source Pull Request.
+  </em>
+</p>
+
 </div>
 
-## 🌟 The Problem
-Contributing to open source is terrifying for beginners.
-- **Overwhelming Codebases**: Thousands of files with no clear entry point.
-- **Complex Setup**: "npm install" rarely works the first time.
-- **Fear of Judgment**: Am I picking an issue that's too hard?
+---
 
-## 💡 The Solution
-OnboardHub acts as your **Senior Developer Buddy**. It scans any GitHub repository URL and generates:
-1.  **Beginner Readiness Score**: A 0-100 rating of how friendly the repo is (based on docs, activity, and issue labeling).
-2.  **First PR Assistant**: Exact, copy-paste terminal commands to clone, install, and branch.
-3.  **Good First Issue Finder**: Filters issues by "Beginner", "Intermediate", and "Pro" complexity using keyword analysis.
+## 🌐 Live & Explore
+
+<p>
+  <em>
+    🚀 Try the app:  
+    🔗 <a href="https://onboardhub-55861920-512be.web.app/"><b>Live OnboardHub Demo</b></a><br>
+    📌 Devfolio Project:  
+    🔗 <a href="https://devfolio.co/projects/onboardhub-5311"><b>OnboardHub on Devfolio</b></a>
+  </em>
+</p>
 
 ---
 
-## ✨ Key Features
+## 📖 Overview
 
-### 1. Beginner Readiness Score 🛡️
-Don't waste time on dead repos. We analyze:
-- **Community Health**: Are maintainers active?
-- **Doc Quality**: Does a README and CONTRIBUTING.md exist?
-- **Issue Labels**: Are there "good first issues"?
+<p>
+  <em>
+    <b>OnboardHub</b> is a beginner-first contribution assistant that converts a GitHub repository into a clear, actionable onboarding journey.
+  </em>
+</p>
 
-### 2. The "First PR Assistant" 💻
-We don't just tell you *what* to do; we give you the code.
-- Auto-generates `git clone`, `cd`, and `npm install` commands.
-- Provides a "Copy to Clipboard" workflow for instant setup.
+<p>
+  <em>
+    Instead of leaving contributors to decipher documentation, manually pick issues, and setup environments, OnboardHub guides users step-by-step — from evaluating repositories to making their first Pull Request.
+  </em>
+</p>
 
-### 3. Smart Issue Matching 🎯
-Filter issues by your actual confidence level.
-- **🌱 Beginner**: Typo fixes, documentation updates, simple UI tweaks.
-- **🚀 Intermediate**: Logic changes, new components, API integration.
-- **⚡ Pro**: Performance optimization, architectural refactors.
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-- **Framework**: Next.js 14 (App Router)
-- **Styling**: Tailwind CSS + Custom Glassmorphism
-- **Animations**: Framer Motion + Tailwind Animate
-- **Icons**: Lucide React
-- **Font**: Outfit (Google Fonts)
-
-### Backend
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Analysis Engine**: Custom logic to parse GitHub API data
-- **API**: GitHub REST API
+<p>
+  <em>
+    OnboardHub bridges the gap between intention and action by combining repository analysis, issue categorization, setup automation, and guided PR workflows — all in one unified experience.
+  </em>
+</p>
 
 ---
 
-## 🚀 Getting Started
+## ✨ Core Features
 
-We have simplified the startup process into a single script.
-
-### Prerequisites
-- Node.js installed (v18+)
-
-### Installation
-
-1.  **Clone the Repository**
-    ```bash
-    git clone https://github.com/soumyadeep/OnboardHub.git
-    cd OnboardHub
-    ```
-
-2.  **Start the Application**
-    Double-click `start_app.bat` OR run:
-    ```bash
-    .\start_app.bat
-    ```
-    *(This script automatically installs dependencies and launches both Frontend (:3000) and Backend (:5000))*
-
-3.  **Open in Browser**
-    Visit `http://localhost:3000`
+<p><em>📘 <b>Repository Evaluation</b> — Get insight into how beginner-friendly a project is with a readiness score.</em></p>
+<p><em>🔍 <b>Issue Skill Mapping</b> — Classifies issues into Beginner, Intermediate, and Pro levels.</em></p>
+<p><em>🚀 <b>Suggested First Actions</b> — Know exactly where to start without guesswork.</em></p>
+<p><em>⚙️ <b>Setup Support</b> — Auto-detect setup commands across tech stacks.</em></p>
+<p><em>🛠️ <b>First PR Assistant</b> — Step-by-step guidance on branching, commits, and PR creation.</em></p>
+<p><em>📊 <b>Progressive UI Flow</b> — Journey-based interface from evaluation to execution.</em></p>
 
 ---
 
-## 📸 Screenshots
+## 📐 System Architecture
 
-| Landing Page | Dashboard Analysis |
-|:---:|:---:|
-| <img src="frontend/public/screenshots/landing.png" width="400" alt="Landing Page"> | <img src="frontend/public/screenshots/dashboard.png" width="400" alt="Dashboard UI"> |
+<p>
+  <em>
+    The architecture is designed around **analysis, guidance, and execution** with an emphasis on simplicity and reliability.
+  </em>
+</p>
 
-*(Note: The actual application features a dynamic glassmorphism UI)*
+- **Frontend** → React + TypeScript (interactive UI, state management)
+- **Repository Analysis** → GitHub API (issue metadata, README parsing)
+- **Difficulty Estimation** → Heuristics and signal-based scoring
+- **Setup Detector** → File scanning for package managers and run commands
+- **Guided Workflow Logic** → Suggestion engine for first actions & PR steps
+- **Hosting** → Firebase Hosting / Static deployment
+
+<p>
+  <em>
+    OnboardHub never automates contributions — it only provides contextual, safe guidance to help users learn while doing.
+  </em>
+</p>
 
 ---
 
-## 🤝 Contributing
+## 🧰 Tech Stack
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+<p align="center"> 
+    <img src="https://img.icons8.com/color/70/react-native.png" alt="React" /> 
+    <img src="https://img.icons8.com/color/70/typescript.png" alt="TypeScript" /> 
+    <img src="https://img.icons8.com/color/70/firebase.png" alt="Firebase" /> 
+    <img src="https://img.icons8.com/color/70/github.png" alt="GitHub API" /> 
+</p>
 
-## 📄 License
+**Frontend**
+- React (Component UI)
+- TypeScript (Type safety)
+- Vite (Development tooling)
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+**Services / APIs**
+- GitHub REST API (Repository info, issues, labels)
+- Firebase Hosting (Deployment)
+- Client-side heuristic engine
 
 ---
 
-**Made with ❤️ by Soumyadeep for Winter Of Code 5.0**
+## 🧠 Why OnboardHub Matters
+
+### 🎯 Reduces Contribution Barriers
+Beginners often give up due to setup frustration or confusion — OnboardHub gives them a path forward.
+
+---
+
+### 🔓 Encourages Learning Through Doing
+Instead of auto-solving issues, contributors are guided on *how* to approach tasks.
+
+---
+
+### 💡 Provides Context-Aware Guidance
+Analysis isn’t generic — it’s tailored to each repo’s structure and metadata.
+
+---
+
+## ⚠️ Challenges I Ran Into
+
+### 1️⃣ No Reliable Issue Difficulty Labels
+GitHub labels are inconsistent or missing.  
+✅ Solved with a multi-signal rule-based difficulty estimator.
+
+---
+
+### 2️⃣ Determining Beginner-Friendly Repos
+Star count doesn’t equal approachability.  
+✅ Solved by crafting a composite **Beginner Readiness Score**.
+
+---
+
+### 3️⃣ Setup Commands Across Stacks
+Different repos use different tools.  
+✅ Built a detection system that infers tools from files and offers fallback suggestions.
+
+---
+
+### 4️⃣ Guidance Without Auto-Solving
+The risk of reducing learning value loomed large.  
+✅ Ensured guidance points contributors, not code.
+
+---
+
+### 5️⃣ Feature Depth vs UI Simplicity
+Lots of features can clutter UX.  
+✅ Adopted a journey-based progressive interface.
+
+---
+
+### 6️⃣ GitHub API Limits & Networking
+Rate limits and delays impacted analysis strings.  
+✅ Implemented batching and graceful state fallbacks.
+
+---
+
+## 🔍 Real-World Use Cases
+
+### 🏁 First-Time OSS Contributions
+Beginners can finally make *their first PR without fear*.
+
+---
+
+### 📁 Repository Evaluation Tool
+Open source maintainers can assess how approachable their project is.
+
+---
+
+### 🛠 Educational Platform
+Learners new to OSS get contextual guidance built into a tool — not a generic tutorial.
+
+---
+
+## 🔮 Future Scope
+
+- AI-powered issue summaries
+- Personalized experience based on contributor skill
+- Browser extension integration
+- Multi-repo onboarding journeys
+- GitHub App integration
+
+---
+
+## ⭐ Support
+
+<p>
+  <em>
+    If you find <b>OnboardHub</b> helpful or impactful,  
+    please give this repository a ⭐ — it motivates and supports further development!
+  </em>
+</p>
+
+---
+
+<div align="center">
+  <a href="#top">
+    <img src="https://img.shields.io/badge/Back%20to%20Top-000000?style=for-the-badge&logo=github&logoColor=white" />
+  </a>
+</div>
