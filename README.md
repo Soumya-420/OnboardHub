@@ -3,7 +3,8 @@
 ## 👇🏻 Click the below image to watch the OnBoardHub Demo video 
 
 
-[![Watch the OnboardHub Demo video](<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/10913b45-263a-463e-a3ae-cbe866524294" />)](https://youtu.be/XQZ24-VpUTs)
+[![Watch the OnboardHub Demo video](<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/efcb96da-0189-42e5-893f-9aeaea9799da" />
+)](https://youtu.be/Q6q_tNk5r50?si=CajtFIU0cP6dx-6)
 
 <div align="center">
 
