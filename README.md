@@ -1,8 +1,8 @@
 <div id="top"></div>
 
-## 👇🏻 Click the image below to watch the OnboardHub Demo video
+## 👇 Click to watch the OnboardHub Demo video
 
-[![Watch the OnboardHub Demo video](image.png)](https://youtu.be/Q6q_tNk5r50?si=CajtFIU0cP6dx-6_)
+[![OnboardHub Demo](https://img.youtube.com/vi/Q6q_tNk5r50/maxresdefault.jpg)](https://youtu.be/Q6q_tNk5r50?si=CajtFIU0cP6dx-6_)
 
 <div align="center">
 
