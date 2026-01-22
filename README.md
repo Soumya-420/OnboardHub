@@ -16,7 +16,6 @@
  </em>
 </p>
 </div>
----
 
 ## 🌟 The Problem
 Contributing to open source is terrifying for beginners.
