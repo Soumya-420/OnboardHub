@@ -2,7 +2,7 @@
 
 ## 👇🏻 Click the image below to watch the OnboardHub Demo video
 
-[![Watch the OnboardHub Demo video](ImgOnboardHub.jpeg)](https://youtu.be/Q6q_tNk5r50?si=CajtFIU0cP6dx-6_)
+[![Watch the OnboardHub Demo video](image.png)](https://youtu.be/Q6q_tNk5r50?si=CajtFIU0cP6dx-6_)
 
 <div align="center">
 
